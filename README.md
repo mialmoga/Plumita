@@ -90,9 +90,9 @@ Si lo publicas con **GitHub Pages**, renombra el archivo a `index.html` para que
 
 <table>
   <tr>
-    <td align="center"><img src="docs/img/exportar.jpeg" width="240" alt="Descarga del archivo en el teléfono"><br><sub>Exportando desde el teléfono</sub></td>
+    <td align="center"><img src="docs/img/exportar.jpeg" width="240" alt="Descarga del archivo en el teléfono"><br><sub>Exportado desde el teléfono</sub></td>
     <td align="center"><img src="docs/img/resultado.png" width="240" alt="PNG final creado con la herramienta"><br><sub>El PNG final, hecho con Plumita</sub></td>
-    <td align="center"><img src="docs/img/resultado.svg" width="240" alt="PNG final creado con la herramienta"><br><sub>El PNG final, hecho con Plumita</sub></td>
+    <td align="center"><img src="docs/img/resultado.svg" width="240" alt="PNG final creado con la herramienta"><br><sub>El SVG final, hecho con Plumita</sub></td>
   </tr>
 </table>
 
