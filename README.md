@@ -61,11 +61,9 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 
 ## Cómo usarlo
 
-1. Descarga `vectores.html`.
-2. Ábrelo en el navegador (probado en Chrome para Android).
-3. Listo. No hay nada que instalar.
-
-Si lo publicas con **GitHub Pages**, renombra el archivo a `index.html` para que la dirección raíz lo abra directo.
+1. Descarga `index.html`, o en línea: **<https://mialmoga.github.io/Plumita/>**.
+3. Ábrelo en el navegador (probado en Chrome para Android).
+4. Listo. No hay nada que instalar.
 
 ### Guía rápida
 
