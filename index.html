@@ -1,7 +1,16 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Vectores</title>
+<title>Plumita</title>
+<link rel="icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="./site.webmanifest">
+<meta name="theme-color" content="#24262b">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Plumita">
+<meta property="og:description" content="Herramienta de diseño vectorial y creación digital.">
+<meta property="og:image" content="https://mialmoga.github.io/Plumita/assets/plumita-github-banner-1280x640.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
 :root{--bg:#24262b;--bar:#1a1c20;--ink:#e8e6e1;--dim:#8d929c;--acc:#5b8cff;--line:#33363d}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -61,7 +70,7 @@ dialog{max-height:92vh;overflow:auto}
 #fab button.on{background:var(--acc);border-color:var(--acc)}
 #fab #close{width:auto;padding:0 18px;font-size:14px}
 </style></head><body>
-<svg id="stage"><g id="world"><rect id="art" fill="#fff" style="filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))"/><image id="rimg" visibility="hidden" preserveAspectRatio="none" pointer-events="none"/><path id="grid" fill="none" stroke="#5b8cff" opacity=".3" pointer-events="none"/><g id="c"></g></g></svg>
+<svg id="stage"><g id="world"><rect id="art" fill="#fff" style="filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))"/><image id="rimg" visibility="hidden" preserveAspectRatio="none" pointer-events="none"/><path id="grid" fill="none" stroke="#5b8cff" opacity=".3" pointer-events="none"/><g id="c"></g><g id="gd" pointer-events="none"></g></g></svg>
 
 <div class="top">
  <button class="tab" id="ttab" aria-label="Plegar barra superior">▲</button>
@@ -102,6 +111,7 @@ dialog{max-height:92vh;overflow:auto}
  <div class="srow"><span>Proyecto</span><button id="pnew">Nuevo</button><button id="popen">Abrir</button><button id="psave">Guardar</button></div>
  <div class="srow"><span>Espejo</span><button id="mh">↔ Lados</button><button id="mv">↕ Arriba</button><button id="m4">✛ Cuatro</button></div>
  <div class="srow"><span>Eje</span><button id="axl">Lienzo</button><button id="axf">Forma</button></div>
+ <div class="srow"><span>Guía ícono</span><button id="gand">Android</button><button id="gios">Apple</button></div>
  <div class="srow"><span>Hueco</span><button id="hrel">Soltar hueco</button></div>
  <div class="srow"><span>Formas</span><button id="badd">Sumar</button><button id="bsub">Restar</button></div>
  <div class="srow"><button id="dup">Duplicar</button><button id="fwd">Al frente</button><button id="bck">Atrás</button></div>
@@ -118,6 +128,10 @@ dialog{max-height:92vh;overflow:auto}
  <div class="row"><label class="chk"><input type="checkbox" id="xbg"> Fondo blanco</label>
  <select id="xsc"><option value="1">PNG ×1</option><option value="2" selected>PNG ×2</option><option value="4">PNG ×4</option></select></div>
  <div class="row"><button type="button" id="xsvg">Descargar SVG</button><button type="button" id="xpng">Descargar PNG</button></div>
+ <b>Íconos para app</b>
+ <div class="row"><label class="chk"><input type="color" id="icbg" value="#ffffff" style="width:44px;padding:2px"> Fondo (Apple y maskable)</label></div>
+ <div class="row"><label class="chk"><input type="checkbox" id="icall"> Aplicar el fondo a todos los íconos</label></div>
+ <div class="row"><button type="button" id="xicons">Exportar assets para app</button></div>
  <div class="row"><button value="x">Cancelar</button><button class="pri" value="ok">Aplicar</button></div>
 </form></dialog>
 
@@ -174,7 +188,7 @@ function finishCur(quiet){if(!cur)return;const c=cur;cur=null;if(c.nodes.length<
 $('#fin').onclick=()=>finishCur();
 
 /* ---------- interfaz ---------- */
-function ui(){$('#undo').disabled=hi<=0;$('#redo').disabled=hi>=H.length-1;$('#trash').disabled=!sel;$('#fin').style.display=cur?'inline-flex':'none';{const tg=cur||(hasSel()?sel:null);$('#close').hidden=!(tg&&!tg.closed&&tg.nodes.length>2)}$('#hand').classList.toggle('on',handOn);
+function ui(){$('#undo').disabled=hi<=0;$('#redo').disabled=hi>=H.length-1;$('#trash').disabled=!sel;$('#fin').style.display=cur?'inline-flex':'none';{const tg=cur||(hasSel()?sel:null);$('#close').hidden=!(tg&&!tg.closed&&tg.nodes.length>2)}$('#hand').classList.toggle('on',handOn);svg.style.cursor=handOn?'grab':refMove?'move':(tool==='pen'||tool==='line')?'crosshair':(tool==='conv'||tool==='add'||tool==='del')?'pointer':'default';
  $('#size').textContent=`${doc.w}×${doc.h}`;$('#hint').textContent=handOn?'Mano: arrastra para mover el lienzo · pellizca para hacer zoom':refMove?'Imagen: arrastra para moverla · pellizca para escalarla':HINT[tool];
  document.querySelectorAll('#tools button').forEach(b=>b.classList.toggle('on',b.dataset.t===tool));updateSty()}
 $('#tools').onclick=e=>{const b=e.target.closest('button');if(!b)return;const t=b.dataset.t;if(t!==tool)finishCur();tool=t;handOn=false;ui();draw()};
@@ -182,13 +196,13 @@ function setArt(){art.setAttribute('width',doc.w);art.setAttribute('height',doc.
 function fit(){const W=innerWidth,Hh=innerHeight,top=topCol?22:$('.top').offsetHeight,bot=botCol?22:$('.bot').offsetHeight,av=Hh-top-bot-24;const s=Math.min((W-32)/doc.w,av/doc.h);view.s=s;view.ox=(W-doc.w*s)/2;view.oy=top+12+(av-doc.h*s)/2;draw()}
 const dlg=$('#dlg');
 $('#size').onclick=()=>{$('#iw').value=doc.w;$('#ih').value=doc.h;dlg.returnValue='';dlg.showModal()};
-[[1080,1080],[1920,1080],[1080,1920],[512,512],[794,1123]].forEach(([w,h])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=`${w}×${h}`;b.onclick=()=>{$('#iw').value=w;$('#ih').value=h};$('#pre').appendChild(b)});
+[[1080,1080],[1024,1024],[1920,1080],[1080,1920],[512,512],[794,1123]].forEach(([w,h])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=`${w}×${h}`;b.onclick=()=>{$('#iw').value=w;$('#ih').value=h};$('#pre').appendChild(b)});
 dlg.addEventListener('close',()=>{if(dlg.returnValue!=='ok')return;const cl=v=>Math.max(16,Math.min(8000,Math.round(+v)||1080));doc.w=cl($('#iw').value);doc.h=cl($('#ih').value);setArt();commit();fit()});
 
 /* ---------- dibujo ---------- */
 function draw(){
  world.setAttribute('transform',`translate(${view.ox} ${view.oy}) scale(${view.s})`);
- const k=1/view.s;let h='';drawRef();drawGrid(k);
+ const k=1/view.s;let h='';drawRef();drawGrid(k);drawGuide(k);
  for(const p of doc.paths)h+=`<path d="${pathD(p)}" fill-rule="evenodd" fill="${p.fill}" stroke="${p.stroke}" stroke-width="${p.sw}" stroke-linejoin="round" stroke-linecap="round"/>`;
  if(sel&&doc.paths.includes(sel)){const A='#5b8cff',hs=5*k;
   const cx=cc();for(const i of visIdx(cx)){const n=cx.nodes[i];for(const w of['i','o']){const q=n[w];if(q[0]||q[1]){const hx=n.x+q[0],hy=n.y+q[1];h+=`<line x1="${n.x}" y1="${n.y}" x2="${hx}" y2="${hy}" stroke="${A}" stroke-width="${1.5*k}"/><circle cx="${hx}" cy="${hy}" r="${6*k}" fill="#fff" stroke="${A}" stroke-width="${1.8*k}"/>`}}}
@@ -198,12 +212,12 @@ function draw(){
 
 /* ---------- gestos ---------- */
 const toDoc=e=>({x:(e.clientX-view.ox)/view.s,y:(e.clientY-view.oy)/view.s});
-svg.addEventListener('contextmenu',e=>e.preventDefault());
+svg.addEventListener('contextmenu',e=>{e.preventDefault();if(lastPT==='mouse')openCtx(e.clientX,e.clientY)});
 document.addEventListener('gesturestart',e=>e.preventDefault());
-svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+svg.addEventListener('pointerdown',e=>{lastPT=e.pointerType;if(e.pointerType==='mouse'&&e.button===2)return;if(ctxPos&&styOpen){styOpen=false;ctxPos=null;updateSty()}svg.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
  if(P.size===2){dropPenTouch();endG(true);const[a,b]=[...P.values()];pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1])||1,m:[(a[0]+b[0])/2,(a[1]+b[1])/2],v:{...view},r:(refMove&&ref)?{x:ref.x,y:ref.y,w:ref.w,h:ref.h}:null};return}
  if(P.size>2||pinch)return;
- if(handOn||e.button===1||e.button===2){g={t:'pan',last:[e.clientX,e.clientY]};return}
+ if(handOn||e.button===1){g={t:'pan',last:[e.clientX,e.clientY]};return}
  down(toDoc(e))});
 svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId))return;P.set(e.pointerId,[e.clientX,e.clientY]);
  if(pinch&&pinch.r){const[a,b]=[...P.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1])||1,m=[(a[0]+b[0])/2,(a[1]+b[1])/2],k=d/pinch.d,v=pinch.v,r=pinch.r;ref.w=r.w*k;ref.h=r.h*k;ref.x=(m[0]-v.ox)/v.s-((pinch.m[0]-v.ox)/v.s-r.x)*k;ref.y=(m[1]-v.oy)/v.s-((pinch.m[1]-v.oy)/v.s-r.y)*k;draw();return}
@@ -263,9 +277,9 @@ function updateSty(){const t=hasSel()?sel:style;
  for(const[id,key]of[['#fsw','fill'],['#ssw','stroke']]){const v=t[key];$(id).querySelectorAll('.dot').forEach(b=>b.classList.toggle('on',b.dataset.c===v));const i=$(id).querySelector('.pick');if(/^#[0-9a-f]{6}$/i.test(v))i.value=v}
  $('#sw').value=t.sw;$('#swo').textContent=t.sw;
  const b=$('#stybtn');b.style.background=t.fill==='none'?'repeating-linear-gradient(45deg,#666 0 3px,#2a2d34 3px 6px)':t.fill;b.style.borderColor=t.stroke==='none'?'#33363d':t.stroke;
- sty.hidden=!styOpen;sty.style.bottom=((botCol?0:$('.bot').offsetHeight)+8)+'px';placeFab();
- $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);syncRefUI();syncMirrorUI()}
-$('#stybtn').onclick=()=>{styOpen=!styOpen;updateSty()};
+ sty.hidden=!styOpen;placeSty();placeFab();
+ $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);syncRefUI();syncMirrorUI();syncGuideUI()}
+$('#stybtn').onclick=()=>{ctxPos=null;styOpen=!styOpen;updateSty()};
 $('#sw').oninput=e=>{const v=+e.target.value;style.sw=v;if(hasSel())sel.sw=v;$('#swo').textContent=v;draw()};
 $('#sw').onchange=()=>{if(hasSel())commit()};
 $('#dup').onclick=()=>{if(!hasSel())return;const c=JSON.parse(JSON.stringify(sel));c.id=nid++;c.nodes.concat(...(c.holes||[])).forEach(n=>{n.x+=24;n.y+=24});doc.paths.push(c);sel=c;selN=-1;commit()};
@@ -505,6 +519,100 @@ $('#hrel').onclick=()=>{if(!hasSel()||!(sel.holes&&sel.holes.length))return;cons
  sel.holes=sel.holes.filter(h=>!rel.includes(h));if(!sel.holes.length)delete sel.holes;
  const i=doc.paths.indexOf(sel);doc.paths.splice(i+1,0,...out);sel=out[out.length-1];selN=-1;selH=null;commit();
  toast(out.length>1?'Huecos soltados como formas independientes':'Hueco soltado como forma independiente')};
+
+/* ---------- escritorio: ratón y teclado (etapa 11) ---------- */
+let ctxPos=null,lastPT='touch',spaceHand=false;
+function placeSty(){if(ctxPos&&innerWidth>=600){const w=340;sty.style.width=w+'px';sty.style.right='auto';sty.style.bottom='auto';sty.style.left=Math.max(8,Math.min(innerWidth-w-8,ctxPos.x))+'px';sty.style.top=Math.max(8,Math.min(innerHeight-(sty.offsetHeight||300)-8,ctxPos.y))+'px'}
+ else{sty.style.width='';sty.style.left='8px';sty.style.right='8px';sty.style.top='auto';sty.style.bottom=((botCol?0:$('.bot').offsetHeight)+8)+'px'}}
+function openCtx(x,y){ctxPos={x,y};styOpen=true;updateSty();placeSty()}
+const TK={'1':'pen','2':'line','3':'direct','4':'conv','5':'add','6':'del',p:'pen',l:'line',a:'direct',c:'conv','+':'add','=':'add','-':'del','_':'del'};
+function handOff(){if(spaceHand){spaceHand=false;handOn=false;ui()}}
+addEventListener('keydown',e=>{const ae=document.activeElement;
+ if(dlg.open||(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&!['range','checkbox','file'].includes(ae.type)))return;
+ const k=e.key,mod=e.ctrlKey||e.metaKey;
+ if(mod){const kl=k.toLowerCase(),act={z:()=>e.shiftKey?$('#redo').click():$('#undo').click(),y:()=>$('#redo').click(),d:()=>$('#dup').click(),s:()=>$('#psave').click()}[kl];if(act){e.preventDefault();act()}return}
+ if(e.altKey)return;
+ if(k===' '){e.preventDefault();if(ae&&ae.tagName==='BUTTON')ae.blur();if(!e.repeat&&!handOn){spaceHand=true;handOn=true;ui()}return}
+ if(k==='Delete'||k==='Backspace'){e.preventDefault();if(!sel||!doc.paths.includes(sel))return;const c=cc();if(selN>=0&&selN<c.nodes.length)delNode(c,selN);else $('#trash').click();return}
+ if(k==='Escape'){if(styOpen){styOpen=false;ctxPos=null;updateSty()}else if(pend){pend=null;toast('Cancelado')}else if(cur)finishCur();else if(sel){sel=null;selN=-1;ui();draw()}return}
+ if(k==='Enter'){if(cur){e.preventDefault();finishCur()}return}
+ const t=TK[k.toLowerCase()];if(t){e.preventDefault();document.querySelector(`#tools [data-t=${t}]`).click()}});
+addEventListener('keyup',e=>{if(e.key===' '){e.preventDefault();handOff()}});
+addEventListener('blur',handOff);
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b&&b.id!=='fin')b.blur()});
+{const T={undo:'Deshacer (Ctrl+Z)',redo:'Rehacer (Ctrl+Y)',fs:'Pantalla completa',trash:'Borrar forma (Supr)',hand:'Mano: mover el lienzo (mantén Espacio)',fin:'Terminar trazo (Enter)',close:'Cerrar trazo',dup:'Duplicar (Ctrl+D)',psave:'Guardar proyecto (Ctrl+S)'};
+ for(const id in T)$('#'+id).title=T[id];
+ const N={pen:'Pluma (1 · P)',line:'Línea (2 · L)',direct:'Nodos (3 · A)',conv:'Curva/Recta (4 · C)',add:'Agregar nodo (5 · +)',del:'Quitar nodo (6 · −)'};
+ document.querySelectorAll('#tools button').forEach(b=>b.title=N[b.dataset.t])}
+
+/* ---------- íconos para app (etapa 12) ---------- */
+let guide={and:false,ios:false};try{Object.assign(guide,JSON.parse(localStorage.getItem('vec-guide')))}catch(e){}
+function syncGuideUI(){$('#gand').classList.toggle('on',guide.and);$('#gios').classList.toggle('on',guide.ios)}
+function setGuide(k){guide[k]=!guide[k];try{localStorage.setItem('vec-guide',JSON.stringify(guide))}catch(e){}syncGuideUI();draw()}
+$('#gand').onclick=()=>setGuide('and');$('#gios').onclick=()=>setGuide('ios');
+function drawGuide(k){const gd=$('#gd');if(!guide.and&&!guide.ios){gd.innerHTML='';return}
+ const L=Math.max(doc.w,doc.h),x=(doc.w-L)/2,y=(doc.h-L)/2,cx=doc.w/2,cy=doc.h/2;let h='';
+ if(guide.and){const v=L*72/108,vx=cx-v/2,vy=cy-v/2;
+  h+=`<path d="M${x} ${y}h${L}v${L}h${-L}zM${vx} ${vy}v${v}h${v}v${-v}z" fill="rgba(0,0,0,.22)" fill-rule="evenodd"/>`;
+  h+=`<rect x="${vx}" y="${vy}" width="${v}" height="${v}" fill="none" stroke="#3ddc84" stroke-width="${1.5*k}"/>`;
+  h+=`<circle cx="${cx}" cy="${cy}" r="${L*33/108}" fill="none" stroke="#3ddc84" stroke-width="${1.5*k}" stroke-dasharray="${6*k} ${4*k}"/>`;
+  h+=`<path d="M${cx} ${y}V${y+L}M${x} ${cy}H${x+L}" stroke="#3ddc84" stroke-width="${k}" opacity=".5"/>`}
+ if(guide.ios){const r=L*.2237;
+  h+=`<path d="M${x} ${y}h${L}v${L}h${-L}zM${x+r} ${y}H${x+L-r}A${r} ${r} 0 0 1 ${x+L} ${y+r}V${y+L-r}A${r} ${r} 0 0 1 ${x+L-r} ${y+L}H${x+r}A${r} ${r} 0 0 1 ${x} ${y+L-r}V${y+r}A${r} ${r} 0 0 1 ${x+r} ${y}Z" fill="rgba(0,0,0,.22)" fill-rule="evenodd"/>`;
+  h+=`<rect x="${x}" y="${y}" width="${L}" height="${L}" rx="${r}" fill="none" stroke="#ff9f0a" stroke-width="${1.5*k}"/>`}
+ gd.innerHTML=h}
+const crcT=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=crcT[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+function makeZip(files){const enc=new TextEncoder(),parts=[],cen=[],now=new Date(),dt=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate(),tm=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);let off=0;
+ for(const f of files){const nm=enc.encode(f.name),crc=crc32(f.bytes),sz=f.bytes.length,lh=new DataView(new ArrayBuffer(30));
+  lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);lh.setUint16(6,0x0800,true);lh.setUint16(10,tm,true);lh.setUint16(12,dt,true);lh.setUint32(14,crc,true);lh.setUint32(18,sz,true);lh.setUint32(22,sz,true);lh.setUint16(26,nm.length,true);
+  parts.push(new Uint8Array(lh.buffer),nm,f.bytes);
+  const ch=new DataView(new ArrayBuffer(46));ch.setUint32(0,0x02014b50,true);ch.setUint16(4,20,true);ch.setUint16(6,20,true);ch.setUint16(8,0x0800,true);ch.setUint16(12,tm,true);ch.setUint16(14,dt,true);ch.setUint32(16,crc,true);ch.setUint32(20,sz,true);ch.setUint32(24,sz,true);ch.setUint16(28,nm.length,true);ch.setUint32(42,off,true);
+  cen.push(new Uint8Array(ch.buffer),nm);off+=30+nm.length+sz}
+ let cs=0;for(const c of cen)cs+=c.length;const end=new DataView(new ArrayBuffer(22));end.setUint32(0,0x06054b50,true);end.setUint16(8,files.length,true);end.setUint16(10,files.length,true);end.setUint32(12,cs,true);end.setUint32(16,off,true);
+ return new Blob([...parts,...cen,new Uint8Array(end.buffer)],{type:'application/zip'})}
+function makeIco(list){const n=list.length,head=6+16*n;let off=head,tot=head;for(const p of list)tot+=p.bytes.length;const buf=new ArrayBuffer(tot),dv=new DataView(buf),u=new Uint8Array(buf);
+ dv.setUint16(2,1,true);dv.setUint16(4,n,true);
+ list.forEach((p,i)=>{const o=6+16*i;u[o]=p.size>=256?0:p.size;u[o+1]=p.size>=256?0:p.size;dv.setUint16(o+4,1,true);dv.setUint16(o+6,32,true);dv.setUint32(o+8,p.bytes.length,true);dv.setUint32(o+12,off,true);u.set(p.bytes,off);off+=p.bytes.length});return u}
+function iconSVG(N,bg){const L=Math.max(doc.w,doc.h),x=(doc.w-L)/2,y=(doc.h-L)/2,body=doc.paths.filter(p=>p.nodes.length>1).map(p=>`<path d="${pathD(p)}" fill-rule="evenodd" fill="${p.fill}" stroke="${p.stroke}" stroke-width="${p.sw}" stroke-linejoin="round" stroke-linecap="round"/>`).join('');
+ return `<svg xmlns="http://www.w3.org/2000/svg" width="${N}" height="${N}" viewBox="${x} ${y} ${L} ${L}">${bg?`<rect x="${x}" y="${y}" width="${L}" height="${L}" fill="${bg}"/>`:''}${body}</svg>`}
+function pngBlob(N,bg){return new Promise((res,rej)=>{const u=URL.createObjectURL(new Blob([iconSVG(N,bg)],{type:'image/svg+xml'})),im=new Image();
+ im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=N;c.getContext('2d').drawImage(im,0,0,N,N);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('png')),'image/png')};im.onerror=()=>rej(new Error('img'));im.src=u})}
+const pngBytes=async(N,bg)=>new Uint8Array(await(await pngBlob(N,bg)).arrayBuffer());
+const ICON_README=`Plumita · assets de ícono
+=========================
+
+Archivos
+- icon-192.png y icon-512.png ........ íconos estándar de la app (manifest, purpose "any")
+- icon-maskable-512.png ................ ícono "maskable" de Android: fondo sólido, tu dibujo tal cual.
+                                          Dibuja dentro del círculo seguro (guía Android) para que no se recorte.
+- apple-touch-icon.png (180x180) ....... ícono de iPhone/iPad. Fondo sólido, sin esquinas redondeadas: iOS las pone solo.
+- favicon.ico (16, 32 y 48 px) ......... pestaña del navegador.
+
+Pega esto en el <head> de tu HTML:
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+
+Y esto dentro de "icons" en tu manifest.webmanifest:
+
+  { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+  { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+  { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+
+Notas
+- Si tu lienzo no era cuadrado, el dibujo se centró en un cuadrado con margen.
+- iOS guarda el ícono en caché: si lo cambias, agrega ?v=2 al enlace.
+`;
+$('#xicons').onclick=async()=>{if(!doc.paths.some(p=>p.nodes.length>1)){dlg.close('x');toast('Dibuja algo primero');return}
+ const bg=$('#icbg').value,tr=$('#icall').checked?bg:null,F=[];
+ try{const add=async(name,N,b)=>F.push({name,bytes:await pngBytes(N,b)});
+  await add('icon-192.png',192,tr);await add('icon-512.png',512,tr);await add('icon-maskable-512.png',512,bg);await add('apple-touch-icon.png',180,bg);
+  const ico=[];for(const n of[16,32,48])ico.push({size:n,bytes:await pngBytes(n,tr)});F.push({name:'favicon.ico',bytes:makeIco(ico)});
+  F.push({name:'LEEME.txt',bytes:new TextEncoder().encode(ICON_README)});
+  dl(makeZip(F),'plumita-icons.zip');dlg.close('x');toast('Assets listos: plumita-icons.zip'+(doc.w!==doc.h?' (el lienzo no es cuadrado: se centró con margen)':''))}
+ catch(e){dlg.close('x');toast('No se pudieron generar los íconos')}};
 
 /* ---------- inicio ---------- */
 try{const s=JSON.parse(localStorage.getItem('vec-doc'));if(s&&s.paths)doc=s}catch(e){}

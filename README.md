@@ -62,7 +62,7 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 
 ## Cómo usarlo
 
-1. Descarga `index.html`.
+1. Descarga `vectores.html`.
 2. Ábrelo en el navegador (probado en Chrome para Android).
 3. Listo. No hay nada que instalar.
 
@@ -82,6 +82,25 @@ o 1. En linea [Plumita en GitHub pages](https://mialmoga.github.io/Plumita/)
 | Mover imagen de referencia | Panel de color → *Mover*, y arrastra o pellizca |
 | Navegar sin tocar el dibujo | Botón ✋ (derecha) |
 | Ganar espacio | Pestañitas ▲ ▼ y botón ⛶ |
+
+### En escritorio (ratón y teclado)
+
+Pensado para el teléfono, pero también se lleva bien con una computadora:
+
+| Acción | Atajo |
+|---|---|
+| Pluma, Línea, Nodos, Curva/Recta, + Nodo, − Nodo | `1` a `6` (en el orden de los botones), o `P` `L` `A` `C` `+` `-` |
+| Deshacer / Rehacer | `Ctrl+Z` / `Ctrl+Y` (o `Ctrl+Shift+Z`) |
+| Duplicar la forma | `Ctrl+D` |
+| Guardar proyecto | `Ctrl+S` |
+| Borrar | `Supr`: el nodo seleccionado o, si no hay nodo, la forma completa |
+| Mano (mover el lienzo) | Mantén `Espacio` y arrastra; al soltar vuelves a tu herramienta |
+| Terminar el trazo / deseleccionar / cerrar el panel | `Enter` / `Esc` |
+| Panel de color y opciones | Clic derecho (se abre junto al cursor) |
+| Zoom | Rueda del ratón |
+| Mover el lienzo con el ratón | Botón central, o `Espacio` + arrastrar |
+
+Los botones muestran su atajo al pasar el cursor por encima.
 
 <table>
   <tr>

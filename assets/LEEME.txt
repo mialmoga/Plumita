@@ -1,0 +1,36 @@
+Plumita · assets de ícono
+=========================
+
+Archivos
+- icon-192.png y icon-512.png ........ íconos estándar de la app (manifest, purpose "any")
+- icon-maskable-512.png ................ ícono "maskable" de Android: fondo sólido, tu dibujo tal cual.
+                                          Dibuja dentro del círculo seguro (guía Android) para que no se recorte.
+- apple-touch-icon.png (180x180) ....... ícono de iPhone/iPad. Fondo sólido, sin esquinas redondeadas: iOS las pone solo.
+- favicon.ico (16, 32 y 48 px) ......... pestaña del navegador.
+
+Pega esto en el <head> de tu HTML:
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+
+Y esto dentro de "icons" en tu manifest.webmanifest:
+
+  { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+  { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+  { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+
+Notas
+- Si tu lienzo no era cuadrado, el dibujo se centró en un cuadrado con margen.
+- iOS guarda el ícono en caché: si lo cambias, agrega ?v=2 al enlace.
+
+
+<link rel="icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="./site.webmanifest">
+<meta name="theme-color" content="#24262b">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Plumita">
+<meta property="og:description" content="Herramienta de diseño vectorial y creación digital.">
+<meta property="og:image" content="https://mialmoga.github.io/Plumita/assets/plumita-github-banner-1280x640.png">
+<meta name="twitter:card" content="summary_large_image">
