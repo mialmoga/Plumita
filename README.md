@@ -8,7 +8,10 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 > *Y para toda la gente que alguna vez pensó "ojalá esto existiera en el celular".*
 
 <p align="center">
-  <img src="docs/img/principal.png" width="300" alt="Una figura con un nodo seleccionado y sus jaladores listos para editar la curva">
+  <img src="docs/img/principal.jpeg" width="300" alt="Una figura con un nodo seleccionado y sus jaladores listos para editar la curva">
+
+- En línea: **<https://mialmoga.github.io/Plumita/>**.
+
 </p>
 
 ---
@@ -16,6 +19,7 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 ## Qué hace
 
 **Dibujo**
+
 - **Pluma:** toca para poner nodos, arrastra para sacar jaladores y curvar, toca el primer nodo para cerrar la forma.
 - **Línea:** arrastra y suelta.
 - **Nodos:** mueve nodos, estira los jaladores para ajustar la curva, o arrastra el trazo completo.
@@ -23,22 +27,25 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 - **+ Nodo / − Nodo:** agrega un nodo sobre el trazo sin cambiar su forma, o quita uno.
 
 **Formas**
+
 - **Sumar y restar** formas cerradas **conservando las curvas** (no las convierte en polígonos). Si restas una forma contenida dentro de otra, queda un hueco.
 - Relleno, contorno y grosor, con paleta rápida y selector libre de color.
 - Duplicar, llevar al frente, mandar atrás.
 
 **Ayudas para trazar**
+
 - **Imagen de referencia:** carga una foto (por ejemplo, de un dibujo en papel) y trázala a mano. Opacidad ajustable; la mueves y escalas con un dedo y pellizco. No se exporta.
 - **Retícula** de 10, 20, 25, 50 o 100 px, con **imán** para que pluma, línea, nodos y jaladores salten a las intersecciones.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/img/fondo.png" width="240" alt="Foto de un dibujo como imagen de fondo, con un trazo encima"><br><sub>Una foto de fondo con opacidad baja, para calcarla a mano</sub></td>
-    <td align="center"><img src="docs/img/reticula.png" width="240" alt="Cuadrícula sobre el lienzo con trazos alineados"><br><sub>Retícula con imán: todo cae en las intersecciones</sub></td>
+    <td align="center"><img src="docs/img/fondo.jpeg" width="240" alt="Foto de un dibujo como imagen de fondo, con un trazo encima"><br><sub>Una foto de fondo con opacidad baja, para calcarla a mano</sub></td>
+    <td align="center"><img src="docs/img/reticula.jpeg" width="240" alt="Cuadrícula sobre el lienzo con trazos alineados"><br><sub>Retícula con imán: todo cae en las intersecciones</sub></td>
   </tr>
 </table>
 
 **Pensado para móvil**
+
 - Zoom y desplazamiento con dos dedos.
 - **Botón mano ✋** para mover el lienzo con un dedo sin cortar el trazo que estás haciendo.
 - **Cerrar trazo** con un botón, sin tener que atinarle al primer nodo.
@@ -47,6 +54,7 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 - Deshacer y rehacer (hasta 80 pasos).
 
 **Exportar**
+
 - **SVG** y **PNG** (×1, ×2 o ×4), con el tamaño de lienzo que elijas y fondo transparente o blanco.
 
 ---
@@ -62,7 +70,7 @@ Si lo publicas con **GitHub Pages**, renombra el archivo a `index.html` para que
 ### Guía rápida
 
 | Quiero… | Hago… |
-|---|---|
+| --- | --- |
 | Elegir el tamaño del lienzo | Toca el botón con las medidas (arriba) |
 | Exportar | Mismo botón: *Descargar SVG* o *Descargar PNG* |
 | Cambiar color, grosor, capas, imagen o retícula | Toca el cuadrito de color (arriba) |
@@ -73,8 +81,8 @@ Si lo publicas con **GitHub Pages**, renombra el archivo a `index.html` para que
 
 <table>
   <tr>
-    <td align="center"><img src="docs/img/color-booleanas.png" width="240" alt="Panel de color abierto y resultado de sumar o restar formas"><br><sub>Panel de color y booleanas: sumar y restar conservando las curvas</sub></td>
-    <td align="center"><img src="docs/img/exportar.png" width="240" alt="Cuadro de tamaño del lienzo con botones para descargar SVG y PNG"><br><sub>Tamaño del lienzo y exportación a SVG o PNG</sub></td>
+    <td align="center"><img src="docs/img/color-booleanas.jpeg" width="240" alt="Panel de color abierto y resultado de sumar o restar formas"><br><sub>Panel de color y booleanas: sumar y restar conservando las curvas</sub></td>
+    <td align="center"><img src="docs/img/exportando.jpeg" width="240" alt="Cuadro de tamaño del lienzo con botones para descargar SVG y PNG"><br><sub>Tamaño del lienzo y exportación a SVG o PNG</sub></td>
   </tr>
 </table>
 
@@ -82,8 +90,9 @@ Si lo publicas con **GitHub Pages**, renombra el archivo a `index.html` para que
 
 <table>
   <tr>
-    <td align="center"><img src="docs/img/exportando.png" width="240" alt="Descarga del archivo en el teléfono"><br><sub>Exportando desde el teléfono</sub></td>
+    <td align="center"><img src="docs/img/exportar.jpeg" width="240" alt="Descarga del archivo en el teléfono"><br><sub>Exportando desde el teléfono</sub></td>
     <td align="center"><img src="docs/img/resultado.png" width="240" alt="PNG final creado con la herramienta"><br><sub>El PNG final, hecho con Plumita</sub></td>
+    <td align="center"><img src="docs/img/resultado.svg" width="240" alt="PNG final creado con la herramienta"><br><sub>El PNG final, hecho con Plumita</sub></td>
   </tr>
 </table>
 
