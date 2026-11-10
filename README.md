@@ -9,7 +9,7 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 
 <p align="center">
   <img src="docs/img/principal.jpeg" width="300" alt="Una figura con un nodo seleccionado y sus jaladores listos para editar la curva">
- <br> [Plumita en GitHub pages](https://mialmoga.github.io/Plumita/) 
+ <br> <a href="https://mialmoga.github.io/Plumita/">Plumita en GitHub pages</a>
 </p>
 
 ---
