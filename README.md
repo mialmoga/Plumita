@@ -8,7 +8,8 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 > *Y para toda la gente que alguna vez pensó "ojalá esto existiera en el celular".*
 
 <p align="center">
-  <img src="docs/img/principal.png" width="300" alt="Una figura con un nodo seleccionado y sus jaladores listos para editar la curva">
+  <img src="docs/img/principal.jpeg" width="300" alt="Una figura con un nodo seleccionado y sus jaladores listos para editar la curva">
+  [Plumita en GitHub pages](https://mialmoga.github.io/Plumita/)
 </p>
 
 ---
@@ -35,8 +36,8 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 
 <table>
   <tr>
-    <td align="center"><img src="docs/img/fondo.png" width="240" alt="Foto de un dibujo como imagen de fondo, con un trazo encima"><br><sub>Una foto de fondo con opacidad baja, para calcarla a mano</sub></td>
-    <td align="center"><img src="docs/img/reticula.png" width="240" alt="Cuadrícula sobre el lienzo con trazos alineados"><br><sub>Retícula con imán: todo cae en las intersecciones</sub></td>
+    <td align="center"><img src="docs/img/fondo.jpeg" width="240" alt="Foto de un dibujo como imagen de fondo, con un trazo encima"><br><sub>Una foto de fondo con opacidad baja, para calcarla a mano</sub></td>
+    <td align="center"><img src="docs/img/reticula.jpeg" width="240" alt="Cuadrícula sobre el lienzo con trazos alineados"><br><sub>Retícula con imán: todo cae en las intersecciones</sub></td>
   </tr>
 </table>
 
@@ -61,11 +62,11 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 
 ## Cómo usarlo
 
-1. Descarga `vectores.html`.
+1. Descarga `index.html`.
 2. Ábrelo en el navegador (probado en Chrome para Android).
 3. Listo. No hay nada que instalar.
 
-Si lo publicas con **GitHub Pages**, renombra el archivo a `index.html` para que la dirección raíz lo abra directo.
+o 1. En linea [Plumita en GitHub pages](https://mialmoga.github.io/Plumita/)
 
 ### Guía rápida
 
@@ -84,8 +85,8 @@ Si lo publicas con **GitHub Pages**, renombra el archivo a `index.html` para que
 
 <table>
   <tr>
-    <td align="center"><img src="docs/img/color-booleanas.png" width="240" alt="Panel de color abierto y resultado de sumar o restar formas"><br><sub>Panel de color y booleanas: sumar y restar conservando las curvas</sub></td>
-    <td align="center"><img src="docs/img/exportar.png" width="240" alt="Cuadro de tamaño del lienzo con botones para descargar SVG y PNG"><br><sub>Tamaño del lienzo y exportación a SVG o PNG</sub></td>
+    <td align="center"><img src="docs/img/color-booleanas.jpeg" width="240" alt="Panel de color abierto y resultado de sumar o restar formas"><br><sub>Panel de color y booleanas: sumar y restar conservando las curvas</sub></td>
+    <td align="center"><img src="docs/img/exportar.jpeg" width="240" alt="Cuadro de tamaño del lienzo con botones para descargar SVG y PNG"><br><sub>Tamaño del lienzo y exportación a SVG o PNG</sub></td>
   </tr>
 </table>
 
@@ -93,8 +94,9 @@ Si lo publicas con **GitHub Pages**, renombra el archivo a `index.html` para que
 
 <table>
   <tr>
-    <td align="center"><img src="docs/img/exportando.png" width="240" alt="Descarga del archivo en el teléfono"><br><sub>Exportando desde el teléfono</sub></td>
+    <td align="center"><img src="docs/img/exportando.jpeg" width="240" alt="Descarga del archivo en el teléfono"><br><sub>Exportando desde el teléfono</sub></td>
     <td align="center"><img src="docs/img/resultado.png" width="240" alt="PNG final creado con la herramienta"><br><sub>El PNG final, hecho con Plumita</sub></td>
+      <td align="center"><img src="docs/img/resultado.svg" width="240" alt="PNG final creado con la herramienta"><br><sub>El SGV final, hecho con Plumita</sub></td>
   </tr>
 </table>
 
