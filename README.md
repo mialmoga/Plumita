@@ -30,6 +30,7 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 - **Sumar y restar** formas cerradas **conservando las curvas** (no las convierte en polígonos). Si restas una forma contenida dentro de otra, queda un hueco.
 - **Huecos editables:** los huecos son contornos como cualquier otro. Al seleccionar una forma ves los nodos de todos sus contornos, y puedes mover nodos, estirar jaladores, convertir curva/recta y agregar o quitar nodos igual que en el exterior. Si un hueco se queda con menos de 3 nodos, desaparece. **Soltar hueco** lo convierte en una forma independiente (con el mismo estilo de la original). Tocar dentro de un hueco selecciona lo que hay detrás, como debe ser.
 - Relleno, contorno y grosor, con paleta rápida y selector libre de color.
+- **Estilo de línea** (panel de color → *Estilo de línea y opacidad*): **esquinas** en punta, redondas o biseladas; **extremos** planos, redondos o cuadrados; trazo **sólido, de rayas, de puntos o mixto** (los guiones escalan con el grosor); **alineación** del contorno al centro, **dentro** o **fuera** de la forma (en formas cerradas, huecos incluidos); y **opacidad** independiente para relleno y contorno. Las formas nuevas heredan el estilo activo, y todo se conserva al duplicar, espejar, agrupar, sumar y restar, soltar un hueco, guardar proyectos y exportar a SVG o PNG. Dentro y fuera se resuelven con recortes (`clipPath`) dentro del SVG, así que se ven igual en navegadores y en editores.
 - Duplicar, llevar al frente, mandar atrás.
 - **Espejo:** crea una copia reflejada de la forma seleccionada, de lado a lado (↔), de arriba a abajo (↕) o las tres copias de los cuatro cuadrantes (✛). El eje puede ser el **centro del lienzo** (ideal para dibujar una mitad y completar la otra) o el **borde de la forma** (la copia queda pegada). La copia es editable como cualquier otra, y los jaladores y huecos se reflejan con ella.
 
@@ -166,7 +167,7 @@ Todo vive en un solo archivo, organizado por secciones comentadas: geometría, h
 
 - Las booleanas ignoran los huecos de las formas que sumas o restas; el resultado sí puede traer huecos nuevos.
 - Las booleanas funcionan sobre formas **cerradas**. Dos formas que comparten un borde exactamente coincidente pueden dar un resultado inesperado.
-- Al **importar SVG** se omiten texto, imágenes, máscaras y filtros; los degradados quedan en gris sólido y la opacidad se ignora. Un SVG muy grande se reduce para caber en el lienzo (máximo 8000 px) y uno muy pequeño, como un ícono, se amplía.
+- Al **importar SVG** se omiten texto, imágenes, máscaras y filtros; los degradados quedan en gris sólido. Se leen esquinas, extremos, guiones y opacidad (los guiones se aproximan al más parecido de los cuatro tipos). Un SVG muy grande se reduce para caber en el lienzo (máximo 8000 px) y uno muy pequeño, como un ícono, se amplía.
 - Los grupos son planos (no hay grupos dentro de grupos) y las booleanas piden una sola forma, así que desagrupa antes de sumar o restar.
 - No hay degradados, texto, ni panel de capas con nombres.
 - La pantalla completa depende del navegador; Safari en iPhone no la permite en páginas web.

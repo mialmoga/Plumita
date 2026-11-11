@@ -72,6 +72,12 @@ dialog{max-height:92vh;overflow:auto}
 #fab #close{width:auto;padding:0 18px;font-size:14px}
 .hex{flex:1;width:auto;min-width:0;height:40px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
 #used{min-height:30px}
+.seg{display:flex;gap:4px;flex:1;min-width:0}
+.seg button{flex:1;min-width:0;height:36px;padding:0 2px;font-size:12px}
+.seg button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+#lnd summary{cursor:pointer;color:var(--dim);font-size:12px;padding:8px 0;list-style:none}
+#lnd summary::before{content:'▸ '}#lnd[open] summary::before{content:'▾ '}
+#lnd .srow>span{width:74px}
 </style></head><body>
 <svg id="stage"><g id="world"><rect id="art" fill="#fff" style="filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))"/><image id="rimg" visibility="hidden" preserveAspectRatio="none" pointer-events="none"/><path id="grid" fill="none" stroke="#5b8cff" opacity=".3" pointer-events="none"/><g id="c"></g><g id="gd" pointer-events="none"></g></g></svg>
 
@@ -111,6 +117,14 @@ dialog{max-height:92vh;overflow:auto}
  <div class="srow"><span>Usados</span><button id="utf" class="on">Relleno</button><button id="uts">Contorno</button></div>
  <div class="srow"><div class="sw" id="used"></div></div>
  <div class="srow"><span>Grosor</span><input type="range" id="sw" min="0" max="60" step="1"><output id="swo"></output></div>
+ <details id="lnd"><summary>Estilo de línea y opacidad</summary>
+  <div class="srow"><span>Esquinas</span><div class="seg" data-k="join"><button data-v="miter">Punta</button><button data-v="round">Redonda</button><button data-v="bevel">Bisel</button></div></div>
+  <div class="srow"><span>Extremos</span><div class="seg" data-k="cap"><button data-v="butt">Plano</button><button data-v="round">Redondo</button><button data-v="square">Cuadrado</button></div></div>
+  <div class="srow"><span>Trazo</span><div class="seg" data-k="dash"><button data-v="solid">Sólido</button><button data-v="dash">Rayas</button><button data-v="dot">Puntos</button><button data-v="dashdot" title="Raya y punto">Mixto</button></div></div>
+  <div class="srow"><span>Alinear</span><div class="seg" data-k="align"><button data-v="center">Centro</button><button data-v="inside">Dentro</button><button data-v="outside">Fuera</button></div></div>
+  <div class="srow"><span>Opac. relleno</span><input type="range" id="fo" min="0" max="100"><output id="foo"></output></div>
+  <div class="srow"><span>Opac. contorno</span><input type="range" id="so" min="0" max="100"><output id="soo"></output></div>
+ </details>
  <div class="srow"><span>Imagen</span><button id="rload">Cargar</button><button id="rmove">Mover</button><button id="rdel">Quitar</button></div>
  <div class="srow"><span>Opacidad</span><input type="range" id="rop" min="5" max="100"><output id="ropo"></output></div>
  <div class="srow"><span>Retícula</span><button id="gon">Cuadrícula</button><button id="gsnap">Imán</button><select id="gsz"><option>10</option><option>20</option><option>25</option><option>50</option><option>100</option></select></div>
@@ -212,7 +226,7 @@ dlg.addEventListener('close',()=>{if(dlg.returnValue!=='ok')return;const cl=v=>M
 function draw(){
  world.setAttribute('transform',`translate(${view.ox} ${view.oy}) scale(${view.s})`);
  const k=1/view.s;let h='';drawRef();drawGrid(k);drawGuide(k);
- for(const p of doc.paths)h+=`<path d="${pathD(p)}" fill-rule="evenodd" fill="${p.fill}" stroke="${p.stroke}" stroke-width="${p.sw}" stroke-linejoin="round" stroke-linecap="round"/>`;
+ doc.paths.forEach((p,i)=>{h+=pathMarkup(p,'a'+i)});
  if((tool==='pen'||tool==='pencil')&&!(g&&g.t==='pencil'))h+=endRings(k);if(g&&g.t==='pencil'&&g.pts.length>1)h+=pencilPreview(k);if(hasSel()&&targets().length>1)h+=selOutlines(k);
  if(sel&&doc.paths.includes(sel)&&tool==='move')h+=moveBox(k);else if(sel&&doc.paths.includes(sel)){const A='#5b8cff',hs=5*k;
   const cx=cc();for(const i of visIdx(cx)){const n=cx.nodes[i];for(const w of['i','o']){const q=n[w];if(q[0]||q[1]){const hx=n.x+q[0],hy=n.y+q[1];h+=`<line x1="${n.x}" y1="${n.y}" x2="${hx}" y2="${hy}" stroke="${A}" stroke-width="${1.5*k}"/><circle cx="${hx}" cy="${hy}" r="${6*k}" fill="#fff" stroke="${A}" stroke-width="${1.8*k}"/>`}}}
@@ -244,10 +258,10 @@ function down(pt){const tol=18/view.s;g=null;if(tool!=='move')msel=[];if(pick){p
   if(cur&&cur.nodes.length>2&&dist(pt,cur.nodes[0])<tol){cur.closed=true;cur.fill=style.fill;selN=0;finishCur();return}
   {const ep=endpointAt(pt,tol,cur);if(ep){if(cur)joinInto(cur,ep);else resumePath(ep);return}}
   const n=mk(pt);
-  if(!cur){cur={id:nid++,nodes:[],closed:false,fill:'none',stroke:style.stroke,sw:style.sw};doc.paths.push(cur)}
+  if(!cur){cur=inheritLine({id:nid++,nodes:[],closed:false,fill:'none',stroke:style.stroke,sw:style.sw});doc.paths.push(cur)}
   cur.nodes.push(n);sel=cur;selN=cur.nodes.length-1;g={t:'pen',n,m:false};ui()}
  else if(tool==='pencil'){const ep=endpointAt(pt,tol*1.2,null);let cont=null,pts=[[pt.x,pt.y]];if(ep){cont=ep.p;if(ep.end==='first')cont.nodes=revN(cont.nodes);const l=cont.nodes[cont.nodes.length-1];pts=[[l.x,l.y]];sel=cont;selN=cont.nodes.length-1}g={t:'pencil',pts,cont,m:false};ui()}
- else if(tool==='line'){const p={id:nid++,nodes:[mk(pt),mk(pt)],closed:false,fill:'none',stroke:style.stroke,sw:style.sw};doc.paths.push(p);sel=p;selN=1;g={t:'line',p,m:false};ui()}
+ else if(tool==='line'){const p=inheritLine({id:nid++,nodes:[mk(pt),mk(pt)],closed:false,fill:'none',stroke:style.stroke,sw:style.sw});doc.paths.push(p);sel=p;selN=1;g={t:'line',p,m:false};ui()}
  else if(tool==='add'){const nh=nodeHit(pt,tol);if(nh){sel=nh.p;delNode(nh.c,nh.k)}else{const h=hitNearest(pt,tol*1.2);if(h){sel=h.p;selH=h.c.nodes===h.p.nodes?null:h.c.nodes;selN=addNodeAt(h.c,h.si,h.t);commit()}else{sel=null;selN=-1;ui()}}}
  else if(tool==='move'){moveDown(pt,tol)}
  else if(tool==='del'){const h=nodeHit(pt,tol);if(h){sel=h.p;delNode(h.c,h.k)}else{sel=null;selN=-1;ui()}}
@@ -297,14 +311,14 @@ function updateSty(){const t=hasSel()?sel:style;
  $('#sw').value=t.sw;$('#swo').textContent=t.sw;
  const b=$('#stybtn');b.style.background=t.fill==='none'?'repeating-linear-gradient(45deg,#666 0 3px,#2a2d34 3px 6px)':t.fill;b.style.borderColor=t.stroke==='none'?'#33363d':t.stroke;
  sty.hidden=!styOpen;placeSty();placeFab();
- $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);{const T=targets();$('#grp').disabled=!(T.length>1&&!T.every(p=>p.gid&&p.gid===T[0].gid));$('#ugrp').disabled=!T.some(p=>p.gid)}syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI()}
+ $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);{const T=targets();$('#grp').disabled=!(T.length>1&&!T.every(p=>p.gid&&p.gid===T[0].gid));$('#ugrp').disabled=!T.some(p=>p.gid)}syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI();syncLineUI()}
 $('#stybtn').onclick=()=>{ctxPos=null;styOpen=!styOpen;updateSty()};
 $('#sw').oninput=e=>{const v=+e.target.value;style.sw=v;for(const p of targets())p.sw=v;$('#swo').textContent=v;draw()};
 $('#sw').onchange=()=>{if(hasSel())commit()};
 
 /* ---------- exportar (etapa 3a) ---------- */
 function buildSVG(){const bg=$('#xbg').checked?`<rect width="${doc.w}" height="${doc.h}" fill="#fff"/>`:'';
- const body=doc.paths.filter(p=>p.nodes.length>1).map(p=>`<path d="${pathD(p)}" fill-rule="evenodd" fill="${p.fill}" stroke="${p.stroke}" stroke-width="${p.sw}" stroke-linejoin="round" stroke-linecap="round"/>`).join('');
+ const body=doc.paths.filter(p=>p.nodes.length>1).map((p,i)=>pathMarkup(p,'x'+i)).join('');
  return `<svg xmlns="http://www.w3.org/2000/svg" width="${doc.w}" height="${doc.h}" viewBox="0 0 ${doc.w} ${doc.h}">${bg}${body}</svg>`}
 function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
 $('#xsvg').onclick=()=>dl(new Blob([buildSVG()],{type:'image/svg+xml'}),'vector.svg');
@@ -356,7 +370,7 @@ $('#badd').onclick=()=>startOp('add');$('#bsub').onclick=()=>startOp('sub');
 function doBool(op,A,B){let r;try{r=bool(op,A,B)}catch(e){r=null}
  if(!r){toast('No se pudo: las formas no se cruzan');draw();return}
  const idx=doc.paths.indexOf(A);doc.paths=doc.paths.filter(x=>x!==A&&x!==B);
- const outs=r.outer.map(nodes=>({id:nid++,nodes,closed:true,fill:A.fill,stroke:A.stroke,sw:A.sw}));
+ const outs=r.outer.map(nodes=>inheritLine({id:nid++,nodes,closed:true,fill:A.fill,stroke:A.stroke,sw:A.sw},A));
  if(outs.length&&r.holes.length)outs[0].holes=r.holes;
  doc.paths.splice(Math.min(idx,doc.paths.length),0,...outs);sel=outs[0]||null;selN=-1;
  if(!outs.length)toast('El resultado quedó vacío');else if((A.holes&&A.holes.length)||(B.holes&&B.holes.length))toast('Nota: los huecos de las formas originales no pasan al resultado');commit()}
@@ -414,7 +428,7 @@ function cleanProject(o){if(!o||o.app!=='plumita'||!o.doc||!Array.isArray(o.doc.
  const w=o.doc.w,h=o.doc.h;if(!fin2(w)||!fin2(h)||w<16||h<16||w>8000||h>8000)return null;
  const paths=[];for(const p of o.doc.paths){const nodes=cleanNodes(p&&p.nodes);if(!nodes||!nodes.length)continue;
   const q={id:nid+paths.length,nodes,closed:!!p.closed,fill:okCol(p.fill)?p.fill:'none',stroke:okCol(p.stroke)?p.stroke:'#14161a',sw:fin2(p.sw)?Math.max(0,Math.min(200,p.sw)):4};
-  if(Array.isArray(p.holes)){const hs=p.holes.map(cleanNodes).filter(Boolean);if(hs.length)q.holes=hs}if(fin2(p.gid)&&p.gid>0)q.gid=Math.floor(p.gid);paths.push(q)}
+  if(Array.isArray(p.holes)){const hs=p.holes.map(cleanNodes).filter(Boolean);if(hs.length)q.holes=hs}if(fin2(p.gid)&&p.gid>0)q.gid=Math.floor(p.gid);for(const[k,vals]of Object.entries({join:['miter','bevel'],cap:['butt','square'],dash:['dash','dot','dashdot'],align:['inside','outside']}))if(vals.includes(p[k]))q[k]=p[k];for(const k of['fo','so'])if(fin2(p[k])&&p[k]<1)q[k]=Math.max(0,Math.min(1,p[k]));paths.push(q)}
  let rf=null;const r=o.ref;if(r&&typeof r.src==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(r.src)&&[r.x,r.y,r.w,r.h,r.op].every(fin2))rf={src:r.src,x:r.x,y:r.y,w:r.w,h:r.h,op:Math.max(.05,Math.min(1,r.op))};
  const g=o.grid||{};return{doc:{w:Math.round(w),h:Math.round(h),paths},ref:rf,grid:{on:!!g.on,snap:!!g.snap,size:[10,20,25,50,100].includes(g.size)?g.size:50}}}
 function applyProject(pr){finishCur(true);doc=pr.doc;nid+=doc.paths.length;ref=pr.ref;rsrc='';refMove=false;grid=pr.grid;sel=null;selN=-1;saveRef();saveGrid();setArt();commit();fit();ui()}
@@ -439,7 +453,7 @@ function normCol(c,def){if(c==null)return def;c=String(c).trim().toLowerCase();i
  if(NAMED[c])return NAMED[c];if(c.startsWith('url(')){svgApprox++;return'#8a8a8a'}return def}
 function cssDecl(t){const o={};String(t).split(';').forEach(p=>{const i=p.indexOf(':');if(i>0)o[p.slice(0,i).trim().toLowerCase()]=p.slice(i+1).trim()});return o}
 function parseCss(t){const r={};for(const m of String(t).matchAll(/([^{}]+)\{([^}]*)\}/g)){const st=cssDecl(m[2]);for(const sel of m[1].split(',')){const k=sel.trim().match(/^\.([\w-]+)$/);if(k)r[k[1]]=Object.assign(r[k[1]]||{},st)}}return r}
-function elStyle(el,css){const o={};for(const k of['fill','stroke','stroke-width','fill-opacity','display','visibility']){const v=el.getAttribute(k);if(v!=null)o[k]=v}
+function elStyle(el,css){const o={};for(const k of['fill','stroke','stroke-width','fill-opacity','stroke-opacity','opacity','stroke-linejoin','stroke-linecap','stroke-dasharray','display','visibility']){const v=el.getAttribute(k);if(v!=null)o[k]=v}
  for(const c of(el.getAttribute('class')||'').split(/\s+/))if(css[c])Object.assign(o,css[c]);const st=el.getAttribute('style');if(st)Object.assign(o,cssDecl(st));return o}
 const mmul=(m,n)=>[m[0]*n[0]+m[2]*n[1],m[1]*n[0]+m[3]*n[1],m[0]*n[2]+m[2]*n[3],m[1]*n[2]+m[3]*n[3],m[0]*n[4]+m[2]*n[5]+m[4],m[1]*n[4]+m[3]*n[5]+m[5]];
 function parseTf(t){let M=[1,0,0,1,0,0];if(!t)return M;for(const m of t.matchAll(/(\w+)\s*\(([^)]*)\)/g)){const v=m[2].split(/[\s,]+/).filter(Boolean).map(Number),f=m[1];let n=null;
@@ -500,15 +514,18 @@ function svgToProject(txt){svgApprox=0;svgNote='';let skip=0,total=0;
  const out=[],SKIPT=['defs','clipPath','mask','symbol','marker','pattern','style','title','desc','metadata','linearGradient','radialGradient','script','namedview','filter'];
  function add(d,M,cur){let subs;try{subs=parseD(d)}catch(e){skip++;return}if(cur.fill==='none'&&cur.stroke==='none')return;
   const sw=cur.stroke==='none'?0:cur.sw*Math.sqrt(Math.abs(M[0]*M[3]-M[1]*M[2])),arr=subs.map(s=>({nodes:subNodes(s,M),closed:s.closed})).filter(a=>a.nodes);
-  const mk2=(a,holes)=>{total+=a.nodes.length;if(total>60000)throw 1;const p={nodes:a.nodes,closed:a.closed,fill:cur.fill,stroke:cur.stroke,sw};if(holes&&holes.length)p.holes=holes;out.push(p)};
+  const mk2=(a,holes)=>{total+=a.nodes.length;if(total>60000)throw 1;const p={nodes:a.nodes,closed:a.closed,fill:cur.fill,stroke:cur.stroke,sw};Object.assign(p,cur.ln);{const fo=cur.fop*cur.op,so=cur.sop*cur.op;if(fo<1)p.fo=Math.max(0,fo);if(so<1)p.so=Math.max(0,so)}if(holes&&holes.length)p.holes=holes;out.push(p)};
   if(cur.fill!=='none'&&arr.length>1&&arr.every(a=>a.closed)){const ar=arr.map(a=>Math.abs(area(polyOf(segsOf(a.nodes))))),mi=ar.indexOf(Math.max(...ar)),main=arr[mi],poly=polyOf(segsOf(main.nodes)),holes=[],rest=[];
    arr.forEach((a,j)=>{if(j!==mi)(inPoly(poly,[a.nodes[0].x,a.nodes[0].y])?holes:rest).push(a)});mk2(main,holes.map(h=>h.nodes));rest.forEach(a=>mk2(a))}
   else arr.forEach(a=>mk2(a))}
  function walk(el,M,inh){for(const ch of el.children){const tag=ch.localName;if(SKIPT.includes(tag))continue;if(['text','image','use','foreignObject','switch'].includes(tag)){skip++;continue}
   const st=elStyle(ch,css);if(st.display==='none'||st.visibility==='hidden')continue;const M2=mmul(M,parseTf(ch.getAttribute('transform')));
   const cur={fill:normCol(st.fill,inh.fill),stroke:normCol(st.stroke,inh.stroke),sw:st['stroke-width']!=null?parseFloat(st['stroke-width']):inh.sw};if(st['fill-opacity']==='0')cur.fill='none';if(!fin2(cur.sw))cur.sw=inh.sw;
+  {const ln=Object.assign({},inh.ln),lj=st['stroke-linejoin'],lc=st['stroke-linecap'],da=st['stroke-dasharray'];if(lj)ln.join=({'miter-clip':'miter',arcs:'miter'})[lj]||lj;if(lc)ln.cap=lc;
+   if(da!==undefined){const v=String(da).trim()==='none'?[]:String(da).split(/[\s,]+/).map(parseFloat).filter(fin2);ln.dash=!v.length?'solid':v[0]<=cur.sw*.3?(v.length>2?'dashdot':'dot'):'dash'}
+   const num=(x,d)=>x!=null&&fin2(parseFloat(x))?parseFloat(x):d;cur.ln=ln;cur.op=inh.op*num(st.opacity,1);cur.fop=num(st['fill-opacity'],inh.fop);cur.sop=num(st['stroke-opacity'],inh.sop)}
   if(tag==='g'||tag==='a'){walk(ch,M2,cur);continue}const d=shapeD(ch,tag);if(d)add(d,M2,cur)}}
- try{walk(root,[k,0,0,k,-mx*k,-my*k],{fill:'#000000',stroke:'none',sw:1})}catch(e){svgNote='El SVG es demasiado complejo para importarlo';return null}
+ try{walk(root,[k,0,0,k,-mx*k,-my*k],{fill:'#000000',stroke:'none',sw:1,ln:{},op:1,fop:1,sop:1})}catch(e){svgNote='El SVG es demasiado complejo para importarlo';return null}
  if(!out.length){svgNote='El SVG no tiene formas compatibles';return null}
  svgNote='SVG importado'+(skip?` (se omitieron ${skip} elemento${skip>1?'s':''} no compatible${skip>1?'s':''}: texto, imágenes…)`:'')+(svgApprox?' · los degradados quedaron en gris':'');
  return cleanProject({app:'plumita',doc:{w:Math.max(16,Math.round(W*k)),h:Math.max(16,Math.round(Hh*k)),paths:out},grid:{...grid}})}
@@ -532,7 +549,7 @@ $('#axl').onclick=()=>{mAxis='lienzo';syncMirrorUI()};$('#axf').onclick=()=>{mAx
 
 /* ---------- huecos editables (etapa 10) ---------- */
 $('#hrel').onclick=()=>{if(!hasSel()||!(sel.holes&&sel.holes.length))return;const c=cc(),rel=c.nodes!==sel.nodes?[c.nodes]:sel.holes.slice();
- const out=rel.map(nodes=>({id:nid++,nodes,closed:true,fill:sel.fill,stroke:sel.stroke,sw:sel.sw}));
+ const out=rel.map(nodes=>inheritLine({id:nid++,nodes,closed:true,fill:sel.fill,stroke:sel.stroke,sw:sel.sw},sel));
  sel.holes=sel.holes.filter(h=>!rel.includes(h));if(!sel.holes.length)delete sel.holes;
  const i=doc.paths.indexOf(sel);doc.paths.splice(i+1,0,...out);sel=out[out.length-1];selN=-1;selH=null;commit();
  toast(out.length>1?'Huecos soltados como formas independientes':'Hueco soltado como forma independiente')};
@@ -592,7 +609,7 @@ function makeZip(files){const enc=new TextEncoder(),parts=[],cen=[],now=new Date
 function makeIco(list){const n=list.length,head=6+16*n;let off=head,tot=head;for(const p of list)tot+=p.bytes.length;const buf=new ArrayBuffer(tot),dv=new DataView(buf),u=new Uint8Array(buf);
  dv.setUint16(2,1,true);dv.setUint16(4,n,true);
  list.forEach((p,i)=>{const o=6+16*i;u[o]=p.size>=256?0:p.size;u[o+1]=p.size>=256?0:p.size;dv.setUint16(o+4,1,true);dv.setUint16(o+6,32,true);dv.setUint32(o+8,p.bytes.length,true);dv.setUint32(o+12,off,true);u.set(p.bytes,off);off+=p.bytes.length});return u}
-function iconSVG(N,bg){const L=Math.max(doc.w,doc.h),x=(doc.w-L)/2,y=(doc.h-L)/2,body=doc.paths.filter(p=>p.nodes.length>1).map(p=>`<path d="${pathD(p)}" fill-rule="evenodd" fill="${p.fill}" stroke="${p.stroke}" stroke-width="${p.sw}" stroke-linejoin="round" stroke-linecap="round"/>`).join('');
+function iconSVG(N,bg){const L=Math.max(doc.w,doc.h),x=(doc.w-L)/2,y=(doc.h-L)/2,body=doc.paths.filter(p=>p.nodes.length>1).map((p,i)=>pathMarkup(p,'i'+i)).join('');
  return `<svg xmlns="http://www.w3.org/2000/svg" width="${N}" height="${N}" viewBox="${x} ${y} ${L} ${L}">${bg?`<rect x="${x}" y="${y}" width="${L}" height="${L}" fill="${bg}"/>`:''}${body}</svg>`}
 function pngBlob(N,bg){return new Promise((res,rej)=>{const u=URL.createObjectURL(new Blob([iconSVG(N,bg)],{type:'image/svg+xml'})),im=new Image();
  im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=N;c.getContext('2d').drawImage(im,0,0,N,N);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('png')),'image/png')};im.onerror=()=>rej(new Error('img'));im.src=u})}
@@ -747,7 +764,28 @@ function finishPencil(q,cancel){const raw=q.pts;if(raw.length<3||(cancel&&raw.le
  if(close){const lastN=nodes.pop();nodes[0].i=lastN.i}
  for(const n of nodes){const lo=Math.hypot(...n.o),li=Math.hypot(...n.i);n.s=lo>1e-6&&li>1e-6&&Math.abs(n.o[0]*n.i[1]-n.o[1]*n.i[0])<.05*lo*li&&n.o[0]*n.i[0]+n.o[1]*n.i[1]<0}
  if(q.cont){const p=q.cont,e=p.nodes[p.nodes.length-1];e.o=nodes[0].o;nodes.shift();p.nodes=p.nodes.concat(nodes);sel=p;selN=-1;commit();return}
- const p={id:nid++,nodes,closed:close,fill:close?style.fill:'none',stroke:style.stroke,sw:style.sw};doc.paths.push(p);sel=p;selN=-1;msel=[];commit()}
+ const p=inheritLine({id:nid++,nodes,closed:close,fill:close?style.fill:'none',stroke:style.stroke,sw:style.sw});doc.paths.push(p);sel=p;selN=-1;msel=[];commit()}
+
+/* ---------- estilos de línea y opacidad (etapa 16) ---------- */
+const LD={join:'round',cap:'round',dash:'solid',align:'center',fo:1,so:1},LKEYS=Object.keys(LD);
+const lv=(p,k)=>p[k]===undefined?LD[k]:p[k];
+function inheritLine(p,src){src=src||style;for(const k of LKEYS)if(src[k]!==undefined&&src[k]!==LD[k])p[k]=src[k];return p}
+function pathMarkup(p,uid){const d=pathD(p),w=p.sw||0,fo=lv(p,'fo'),so=lv(p,'so'),dash=lv(p,'dash'),join=lv(p,'join');let cap=lv(p,'cap'),da='';const u=Math.max(w,1);
+ if(dash==='dash')da=`${3*u} ${2*u}`;else if(dash==='dot'){da=`0.01 ${2*u}`;cap='round'}else if(dash==='dashdot'){da=`${3*u} ${1.6*u} 0.01 ${1.6*u}`;cap='round'}
+ const has=p.stroke!=='none'&&w>0,sa=`stroke-linejoin="${join}" stroke-linecap="${cap}"${da?` stroke-dasharray="${da}"`:''}${join==='miter'?' stroke-miterlimit="10"':''}${so<1?` stroke-opacity="${so}"`:''}`,
+  fa=`fill-rule="evenodd" fill="${p.fill}"${fo<1?` fill-opacity="${fo}"`:''}`,al=(p.closed&&has)?lv(p,'align'):'center';
+ if(al==='center'||!has)return`<path d="${d}" ${fa} stroke="${p.stroke}" stroke-width="${w}" ${sa}/>`;
+ const fp=p.fill!=='none'?`<path d="${d}" ${fa} stroke="none"/>`:'',st=`<path d="${d}" fill="none" stroke="${p.stroke}" stroke-width="${2*w}" ${sa}`;
+ if(al==='inside')return`<clipPath id="c${uid}"><path d="${d}" clip-rule="evenodd"/></clipPath>${fp}${st} clip-path="url(#c${uid})"/>`;
+ const bb=bounds(p),mg=(join==='miter'?10:2)*w+2,mx=+(bb.x0-mg).toFixed(2),my=+(bb.y0-mg).toFixed(2),mw=+(bb.x1-bb.x0+2*mg).toFixed(2),mh=+(bb.y1-bb.y0+2*mg).toFixed(2);
+ const same=Math.sign(area(polyOf(segsOf(p.nodes))))===Math.sign(area([[0,0],[1,0],[1,1],[0,1]])),rect=same?`M${mx} ${my}v${mh}h${mw}v${-mh}z`:`M${mx} ${my}h${mw}v${mh}h${-mw}z`;
+ return`<clipPath id="o${uid}"><path d="${rect}${d}" clip-rule="evenodd"/></clipPath>${fp}${st} clip-path="url(#o${uid})"/>`}
+function lineSet(k,v,live){style[k]=v;for(const p of targets()){if(v===LD[k])delete p[k];else p[k]=v}if(live){draw();return}commit()}
+function syncLineUI(){const t=hasSel()?sel:style;
+ document.querySelectorAll('#lnd .seg').forEach(box=>{const v=lv(t,box.dataset.k);box.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v))});
+ for(const k of['fo','so']){const el=$('#'+k);if(document.activeElement!==el)el.value=Math.round(lv(t,k)*100);$('#'+k+'o').textContent=Math.round(lv(t,k)*100)+'%'}}
+document.querySelectorAll('#lnd .seg').forEach(box=>box.onclick=e=>{const b=e.target.closest('button');if(b)lineSet(box.dataset.k,b.dataset.v)});
+for(const k of['fo','so']){$('#'+k).oninput=e=>{lineSet(k,+e.target.value/100,true);$('#'+k+'o').textContent=e.target.value+'%'};$('#'+k).onchange=()=>{if(hasSel())commit()}}
 
 /* ---------- inicio ---------- */
 try{const s=JSON.parse(localStorage.getItem('vec-doc'));if(s&&s.paths)doc=s}catch(e){}
