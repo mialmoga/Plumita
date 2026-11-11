@@ -4,7 +4,7 @@
    Sube el número de VERSION en cada release para limpiar cachés viejos. */
 const VERSION = 'plumita-v1';
 const CORE = [
-  './', './index.html', './vectores.html', './site.webmanifest', './favicon.ico',
+  './', './index.html', './plumita.html', './site.webmanifest', './favicon.ico',
   './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-512.png', './assets/apple-touch-icon.png'
 ];
 
