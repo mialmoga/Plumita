@@ -2,7 +2,7 @@
    Estrategia: red primero y caché como respaldo, así siempre ves la versión nueva
    cuando hay internet y la app sigue funcionando sin conexión.
    Sube el número de VERSION en cada release para limpiar cachés viejos. */
-const VERSION = 'plumita-v1';
+const VERSION = 'plumita-v2';
 const CORE = [
   './', './index.html', './plumita.html', './site.webmanifest', './favicon.ico',
   './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-512.png', './assets/apple-touch-icon.png'

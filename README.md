@@ -17,12 +17,14 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 ## Qué hace
 
 **Dibujo**
-- **Pluma:** toca para poner nodos, arrastra para sacar jaladores y curvar, toca el primer nodo para cerrar la forma.
+- **Pluma:** toca para poner nodos, arrastra para sacar jaladores y curvar, toca el primer nodo para cerrar la forma. Con la pluma también puedes **continuar un trazo abierto** tocando uno de sus extremos (los extremos libres se marcan con un anillo), y si estás dibujando y tocas el extremo de **otro** trazo abierto, **los une** en uno solo.
+- **Lápiz:** dibuja a mano alzada con el dedo; al soltar, la línea se ajusta a curvas de Bézier con pocos nodos (algoritmo de Schneider). El control **Suavizado** del panel de color decide cuánto simplifica: más alto, menos nodos. Si el final cae cerca del principio, la forma se cierra y se rellena. Si empiezas sobre el extremo de un trazo abierto, lo continúa. Un segundo dedo a media línea la descarta.
 - **Línea:** arrastra y suelta.
 - **Nodos:** mueve nodos, estira los jaladores para ajustar la curva, o arrastra el trazo completo.
 - **Mover:** selecciona una forma y arrástrala entera. Su caja trae un círculo arriba para **rotarla** y esquinas para **escalarla** (proporcional, con la esquina opuesta fija). Con el imán encendido, mueve a saltos de retícula y rota de 15° en 15°.
+- **Selección múltiple y grupos:** el botón ☑ (flotante, a la derecha) permite sumar o quitar formas de la selección con un toque. Con la herramienta Mover, **mantén pulsado y arrastra** para seleccionar todo lo que vayas tocando a tu paso. **Agrupar** y **Desagrupar** (panel de color) hacen que varias formas se comporten como una: se seleccionan juntas y se mueven, rotan, escalan, duplican, espejan, borran, recolorean y reordenan en bloque. Los grupos se guardan en los proyectos; en el SVG exportado quedan aplanados.
 - **Convertir:** convierte un nodo de punta a suave (y al revés). Si lo arrastras, saca jaladores.
-- **+ Nodo / − Nodo:** agrega un nodo sobre el trazo sin cambiar su forma, o quita uno.
+- **± Nodo:** toca un nodo para quitarlo, o toca el trazo en un tramo para agregar uno sin cambiar su forma.
 
 **Formas**
 - **Sumar y restar** formas cerradas **conservando las curvas** (no las convierte en polígonos). Si restas una forma contenida dentro de otra, queda un hueco.
@@ -70,7 +72,7 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 
 ## Cómo usarlo
 
-1. Descarga `vectplumita.html`.
+1. Descarga `vectores.html`.
 2. Ábrelo en el navegador (probado en Chrome para Android).
 3. Listo. No hay nada que instalar.
 
@@ -85,6 +87,8 @@ o 1. En linea [Plumita en GitHub pages](https://mialmoga.github.io/Plumita/)
 | Exportar | Mismo botón: *Descargar SVG* o *Descargar PNG* |
 | Cambiar color, grosor, capas, imagen o retícula | Toca el cuadrito de color (arriba) |
 | Editar o soltar un hueco | Herramienta *Nodos*: toca un nodo del hueco y edítalo como cualquier otro. Para separarlo, panel de color → *Soltar hueco* |
+| Seleccionar varias formas | Botón ☑ y toca cada forma; o con *Mover*, mantén pulsado y desliza sobre ellas |
+| Agrupar o desagrupar | Panel de color → fila *Grupo* |
 | Mover, rotar o escalar una forma | Herramienta *Mover*: arrastra la forma, el círculo de arriba (rotar) o una esquina (escalar) |
 | Tomar un color de otra forma o de la foto | Panel de color → *Gotero* → toca el color |
 | Usar un color exacto | Panel de color → *Código*: escribe el hexadecimal |
@@ -101,8 +105,10 @@ Pensado para el teléfono, pero también se lleva bien con una computadora:
 
 | Acción | Atajo |
 |---|---|
-| Pluma, Línea, Nodos, Mover, Convertir, + Nodo, − Nodo | `1` a `7` (en el orden de los botones), o `P` `L` `A` `V` `C` `+` `-` |
+| Pluma, Lápiz, Línea, Nodos, Mover, Convertir, ± Nodo | `1` a `7` (en el orden de los botones), o `P` `N` `L` `A` `V` `C` `+` `-` |
 | Cuentagotas de relleno / de contorno | `I` / `Shift+I` |
+| Seleccionar todo / Agrupar / Desagrupar | `Ctrl+A` / `Ctrl+G` / `Ctrl+Shift+G` |
+| Sumar o quitar una forma de la selección | `Shift` + clic con la herramienta Mover |
 | Deshacer / Rehacer | `Ctrl+Z` / `Ctrl+Y` (o `Ctrl+Shift+Z`) |
 | Duplicar la forma | `Ctrl+D` |
 | Guardar proyecto | `Ctrl+S` |
@@ -161,6 +167,7 @@ Todo vive en un solo archivo, organizado por secciones comentadas: geometría, h
 - Las booleanas ignoran los huecos de las formas que sumas o restas; el resultado sí puede traer huecos nuevos.
 - Las booleanas funcionan sobre formas **cerradas**. Dos formas que comparten un borde exactamente coincidente pueden dar un resultado inesperado.
 - Al **importar SVG** se omiten texto, imágenes, máscaras y filtros; los degradados quedan en gris sólido y la opacidad se ignora. Un SVG muy grande se reduce para caber en el lienzo (máximo 8000 px) y uno muy pequeño, como un ícono, se amplía.
+- Los grupos son planos (no hay grupos dentro de grupos) y las booleanas piden una sola forma, así que desagrupa antes de sumar o restar.
 - No hay degradados, texto, ni panel de capas con nombres.
 - La pantalla completa depende del navegador; Safari en iPhone no la permite en páginas web.
 - Está probado en Chrome para Android y con pruebas automáticas de la lógica geométrica. En otros navegadores puede haber detalles por pulir.
