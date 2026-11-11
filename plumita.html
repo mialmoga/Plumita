@@ -78,6 +78,13 @@ dialog{max-height:92vh;overflow:auto}
 #lnd summary{cursor:pointer;color:var(--dim);font-size:12px;padding:8px 0;list-style:none}
 #lnd summary::before{content:'▸ '}#lnd[open] summary::before{content:'▾ '}
 #lnd .srow>span{width:74px}
+html{scrollbar-width:thin;scrollbar-color:#4a4f5a transparent}
+@supports not (scrollbar-color:auto){
+ ::-webkit-scrollbar{width:10px;height:10px}
+ ::-webkit-scrollbar-track{background:transparent}
+ ::-webkit-scrollbar-thumb{background:#4a4f5a;border-radius:6px;border:2px solid var(--bar);background-clip:content-box}
+ ::-webkit-scrollbar-thumb:hover{background:var(--acc);background-clip:content-box}
+ ::-webkit-scrollbar-corner{background:transparent}}
 </style></head><body>
 <svg id="stage"><g id="world"><rect id="art" fill="#fff" style="filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))"/><image id="rimg" visibility="hidden" preserveAspectRatio="none" pointer-events="none"/><path id="grid" fill="none" stroke="#5b8cff" opacity=".3" pointer-events="none"/><g id="c"></g><g id="gd" pointer-events="none"></g></g></svg>
 
@@ -138,6 +145,7 @@ dialog{max-height:92vh;overflow:auto}
  <div class="srow"><span>Grupo</span><button id="grp">Agrupar</button><button id="ugrp">Desagrupar</button></div>
  <div class="srow"><span>Hueco</span><button id="hrel">Soltar hueco</button></div>
  <div class="srow"><span>Formas</span><button id="badd">Sumar</button><button id="bsub">Restar</button></div>
+ <div class="srow"><span>Más</span><button id="bint">Intersecar</button><button id="bxor">Excluir</button><button id="bdiv">Dividir</button></div>
  <div class="srow"><button id="dup">Duplicar</button><button id="fwd">Al frente</button><button id="bck">Atrás</button></div>
 </div>
 
@@ -311,7 +319,7 @@ function updateSty(){const t=hasSel()?sel:style;
  $('#sw').value=t.sw;$('#swo').textContent=t.sw;
  const b=$('#stybtn');b.style.background=t.fill==='none'?'repeating-linear-gradient(45deg,#666 0 3px,#2a2d34 3px 6px)':t.fill;b.style.borderColor=t.stroke==='none'?'#33363d':t.stroke;
  sty.hidden=!styOpen;placeSty();placeFab();
- $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);{const T=targets();$('#grp').disabled=!(T.length>1&&!T.every(p=>p.gid&&p.gid===T[0].gid));$('#ugrp').disabled=!T.some(p=>p.gid)}syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI();syncLineUI()}
+ $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=$('#bint').disabled=$('#bxor').disabled=$('#bdiv').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);{const T=targets();$('#grp').disabled=!(T.length>1&&!T.every(p=>p.gid&&p.gid===T[0].gid));$('#ugrp').disabled=!T.some(p=>p.gid)}syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI();syncLineUI()}
 $('#stybtn').onclick=()=>{ctxPos=null;styOpen=!styOpen;updateSty()};
 $('#sw').oninput=e=>{const v=+e.target.value;style.sw=v;for(const p of targets())p.sw=v;$('#swo').textContent=v;draw()};
 $('#sw').onchange=()=>{if(hasSel())commit()};
@@ -354,26 +362,39 @@ const straight=q=>{const dx=q[3][0]-q[0][0],dy=q[3][1]-q[0][1],L=Math.hypot(dx,d
 function toNodes(ch){const n=ch.length;return ch.map((q,k)=>{const pv=ch[(k+n-1)%n],o=straight(q)?[0,0]:[q[1][0]-q[0][0],q[1][1]-q[0][1]],i=straight(pv)?[0,0]:[pv[2][0]-pv[3][0],pv[2][1]-pv[3][1]],lo=Math.hypot(...o),li=Math.hypot(...i);
  return{x:q[0][0],y:q[0][1],o,i,s:lo>1e-6&&li>1e-6&&Math.abs(o[0]*i[1]-o[1]*i[0])<1e-3*lo*li&&o[0]*i[0]+o[1]*i[1]<0}})}
 function bool(op,A,B){const na=orient(A.nodes),nb=orient(B.nodes),SA=segsOf(na),SB=segsOf(nb),pa=polyOf(SA),pb=polyOf(SB),X=xsect(SA,SB);
- if(!X.length){const ain=inPoly(pb,[na[0].x,na[0].y]),bin=inPoly(pa,[nb[0].x,nb[0].y]);
-  if(op==='add')return ain?{outer:[nb],holes:[]}:bin?{outer:[na],holes:[]}:null;
-  return ain?{outer:[],holes:[]}:bin?{outer:[na],holes:[nb]}:null}
+ const mkr=chs=>{const r={outer:[],holes:[]};for(const ch of loops(chs))(area(polyOf(ch))>0?r.outer:r.holes).push(toNodes(ch));return r},E={outer:[],holes:[]};
+ if(!X.length){const ain=inPoly(pb,[na[0].x,na[0].y]),bin=inPoly(pa,[nb[0].x,nb[0].y]);if(!ain&&!bin)return null;
+  const big=ain?nb:na,small=ain?na:nb;
+  if(op==='add')return{outer:[big],holes:[]};
+  if(op==='sub')return ain?E:{outer:[na],holes:[nb]};
+  if(op==='int')return{outer:[small],holes:[]};
+  if(op==='xor')return{outer:[big],holes:[small]};
+  return ain?{parts:[{r:{outer:[na],holes:[]},k:'I'},{r:{outer:[nb],holes:[na]},k:'B'}]}:{parts:[{r:{outer:[na],holes:[nb]},k:'A'},{r:{outer:[nb],holes:[]},k:'I'}]}}
  const ca={},cb={};X.forEach(x=>{(ca[x.i]=ca[x.i]||[]).push(x.ta);(cb[x.k]=cb[x.k]||[]).push(x.tb)});
- const keep=[];
- for(const q of pieces(SA,ca))if(!inPoly(pb,bzAt(q,.5)))keep.push(q);
- for(const q of pieces(SB,cb)){const ins=inPoly(pa,bzAt(q,.5));if(op==='add'?!ins:ins)keep.push(op==='add'?q:rev(q))}
- const r={outer:[],holes:[]};for(const ch of loops(keep))(area(polyOf(ch))>0?r.outer:r.holes).push(toNodes(ch));
+ const AI=[],AO=[],BI=[],BO=[],R=a=>a.map(rev);
+ for(const q of pieces(SA,ca))(inPoly(pb,bzAt(q,.5))?AI:AO).push(q);
+ for(const q of pieces(SB,cb))(inPoly(pa,bzAt(q,.5))?BI:BO).push(q);
+ let r;
+ if(op==='add')r=mkr([...AO,...BO]);
+ else if(op==='sub')r=mkr([...AO,...R(BI)]);
+ else if(op==='int')r=mkr([...AI,...BI]);
+ else if(op==='xor')r=mkr([...AO,...BO,...R(AI),...R(BI)]);
+ else return{parts:[{r:mkr([...AO,...R(BI)]),k:'A'},{r:mkr([...AI,...BI]),k:'I'},{r:mkr([...BO,...R(AI)]),k:'B'}]};
  return r.outer.length||r.holes.length?r:null}
 /*ENDBOOL*/
 
-function startOp(op){finishCur();if(!hasSel()||!sel.closed){toast('Selecciona primero una forma cerrada');return}if(targets().length>1){toast('Desagrupa o selecciona una sola forma');return}pend=op;styOpen=false;updateSty();toast(op==='add'?'Toca la forma que quieres sumar':'Toca la forma que quieres restar')}
-$('#badd').onclick=()=>startOp('add');$('#bsub').onclick=()=>startOp('sub');
+function startOp(op){finishCur();if(!hasSel()||!sel.closed){toast('Selecciona primero una forma cerrada');return}if(targets().length>1){toast('Desagrupa o selecciona una sola forma');return}pend=op;styOpen=false;updateSty();toast({add:'Toca la forma que quieres sumar',sub:'Toca la forma que quieres restar',int:'Toca la otra forma: se queda solo lo que se encima',xor:'Toca la otra forma: se quita lo que se encima',div:'Toca la otra forma para dividir en piezas'}[op])}
+$('#badd').onclick=()=>startOp('add');$('#bsub').onclick=()=>startOp('sub');$('#bint').onclick=()=>startOp('int');$('#bxor').onclick=()=>startOp('xor');$('#bdiv').onclick=()=>startOp('div');
 function doBool(op,A,B){let r;try{r=bool(op,A,B)}catch(e){r=null}
- if(!r){toast('No se pudo: las formas no se cruzan');draw();return}
- const idx=doc.paths.indexOf(A);doc.paths=doc.paths.filter(x=>x!==A&&x!==B);
- const outs=r.outer.map(nodes=>inheritLine({id:nid++,nodes,closed:true,fill:A.fill,stroke:A.stroke,sw:A.sw},A));
- if(outs.length&&r.holes.length)outs[0].holes=r.holes;
- doc.paths.splice(Math.min(idx,doc.paths.length),0,...outs);sel=outs[0]||null;selN=-1;
- if(!outs.length)toast('El resultado quedó vacío');else if((A.holes&&A.holes.length)||(B.holes&&B.holes.length))toast('Nota: los huecos de las formas originales no pasan al resultado');commit()}
+ if(!r){toast('No se pudo: las formas no se tocan');draw();return}
+ const ia=doc.paths.indexOf(A),ib=doc.paths.indexOf(B),idx=Math.min(ia,ib);
+ const mkOut=(rs,src)=>{const outs=rs.outer.map(nodes=>inheritLine({id:nid++,nodes,closed:true,fill:src.fill,stroke:src.stroke,sw:src.sw},src));if(outs.length&&rs.holes.length)outs[0].holes=rs.holes;return outs};
+ let outs=[];
+ if(r.parts){const top=ia>ib?A:B;for(const pt of r.parts)outs.push(...mkOut(pt.r,pt.k==='A'?A:pt.k==='B'?B:top))}
+ else outs=mkOut(r,A);
+ doc.paths=doc.paths.filter(x=>x!==A&&x!==B);doc.paths.splice(Math.min(idx,doc.paths.length),0,...outs);setSel(outs);
+ if(!outs.length)toast('El resultado quedó vacío');else if((A.holes&&A.holes.length)||(B.holes&&B.holes.length))toast('Nota: los huecos de las formas originales no pasan al resultado');else if(op==='div')toast('Dividido en '+outs.length+' pieza'+(outs.length>1?'s':''));
+ commit()}
 
 /* ---------- imagen de referencia y retícula (etapa 4) ---------- */
 let ref=null,refMove=false,rsrc='',grid={on:false,snap:false,size:50};
