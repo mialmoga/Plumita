@@ -2,6 +2,7 @@
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Plumita</title>
+<meta name="description" content="Herramienta de diseño vectorial y creación digital.">
 <link rel="icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="manifest" href="./site.webmanifest">
@@ -25,8 +26,8 @@ button:disabled{opacity:.35}
 .top svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .bot{position:fixed;left:0;right:0;bottom:0;background:var(--bar);border-top:1px solid var(--line);padding:4px 6px calc(6px + env(safe-area-inset-bottom));z-index:5}
 #hint{text-align:center;color:var(--dim);font-size:12px;padding:4px 6px 6px;min-height:24px}
-.tools{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
-.tools button{flex-direction:column;height:56px;gap:2px;font-size:11px;padding:0;min-width:0}
+.tools{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.tools button{flex-direction:column;height:56px;gap:2px;font-size:10px;padding:0;min-width:0}
 .tools button.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .tools svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 dialog{background:var(--bar);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:18px;width:min(340px,92vw)}
@@ -69,6 +70,8 @@ dialog{max-height:92vh;overflow:auto}
 #fab button{width:52px;height:52px;border-radius:26px;background:var(--bar);box-shadow:0 2px 8px rgba(0,0,0,.5);font-size:22px;padding:0}
 #fab button.on{background:var(--acc);border-color:var(--acc)}
 #fab #close{width:auto;padding:0 18px;font-size:14px}
+.hex{flex:1;width:auto;min-width:0;height:40px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+#used{min-height:30px}
 </style></head><body>
 <svg id="stage"><g id="world"><rect id="art" fill="#fff" style="filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))"/><image id="rimg" visibility="hidden" preserveAspectRatio="none" pointer-events="none"/><path id="grid" fill="none" stroke="#5b8cff" opacity=".3" pointer-events="none"/><g id="c"></g><g id="gd" pointer-events="none"></g></g></svg>
 
@@ -91,7 +94,8 @@ dialog{max-height:92vh;overflow:auto}
   <button data-t="pen"><svg viewBox="0 0 24 24"><path d="M12 3l5 9-5 4-5-4z"/><path d="M12 16v5"/><circle cx="12" cy="10" r="1"/></svg>Pluma</button>
   <button data-t="line"><svg viewBox="0 0 24 24"><path d="M5 19L19 5"/><circle cx="5" cy="19" r="1.5"/><circle cx="19" cy="5" r="1.5"/></svg>Línea</button>
   <button data-t="direct"><svg viewBox="0 0 24 24"><path d="M6 3l12 8-5 1.5L10 18z"/></svg>Nodos</button>
-  <button data-t="conv"><svg viewBox="0 0 24 24"><path d="M4 19L10 6Q17 5 20 19"/></svg>Curva/Recta</button>
+  <button data-t="move"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg>Mover</button>
+  <button data-t="conv"><svg viewBox="0 0 24 24"><path d="M4 19L10 6Q17 5 20 19"/></svg>Convertir</button>
   <button data-t="add"><svg viewBox="0 0 24 24"><path d="M3 20Q12 8 21 20"/><path d="M12 2v6M9 5h6"/></svg>+ Nodo</button>
   <button data-t="del"><svg viewBox="0 0 24 24"><path d="M3 20Q12 8 21 20"/><path d="M9 5h6"/></svg>− Nodo</button>
  </div>
@@ -102,6 +106,10 @@ dialog{max-height:92vh;overflow:auto}
 <div id="sty" hidden>
  <div class="srow"><span>Relleno</span><div class="sw" id="fsw"></div></div>
  <div class="srow"><span>Contorno</span><div class="sw" id="ssw"></div></div>
+ <div class="srow"><span>Código</span><input class="hex" id="hexf" placeholder="Relleno #ff8000" maxlength="9" autocapitalize="off" autocomplete="off" spellcheck="false"><input class="hex" id="hexs" placeholder="Contorno #000" maxlength="9" autocapitalize="off" autocomplete="off" spellcheck="false"></div>
+ <div class="srow"><span>Gotero</span><button id="dpf">💧 Relleno</button><button id="dps">💧 Contorno</button></div>
+ <div class="srow"><span>Usados</span><button id="utf" class="on">Relleno</button><button id="uts">Contorno</button></div>
+ <div class="srow"><div class="sw" id="used"></div></div>
  <div class="srow"><span>Grosor</span><input type="range" id="sw" min="0" max="60" step="1"><output id="swo"></output></div>
  <div class="srow"><span>Imagen</span><button id="rload">Cargar</button><button id="rmove">Mover</button><button id="rdel">Quitar</button></div>
  <div class="srow"><span>Opacidad</span><input type="range" id="rop" min="5" max="100"><output id="ropo"></output></div>
@@ -141,7 +149,7 @@ const svg=$('#stage'),world=$('#world'),C=$('#c'),art=$('#art');
 let doc={w:1080,h:1080,paths:[]},view={s:1,ox:0,oy:0},tool='pen',sel=null,selN=-1,selH=null,cur=null,g=null,pinch=null,nid=1;
 const style={fill:'#8fb3ff',stroke:'#14161a',sw:4};
 const P=new Map();let H=[],hi=-1;
-const HINT={pen:'Toca para poner nodos · arrastra para curvar · toca el primero para cerrar',line:'Arrastra para trazar una línea',direct:'Toca un trazo o nodo · arrastra nodos y jaladores',conv:'Toca un nodo: curva ↔ recta · arrástralo para sacar jaladores',add:'Toca sobre el trazo para añadir un nodo',del:'Toca un nodo para quitarlo'};
+const HINT={move:'Toca una forma · arrastra para moverla · círculo para rotar · esquinas para escalar',pen:'Toca para poner nodos · arrastra para curvar · toca el primero para cerrar',line:'Arrastra para trazar una línea',direct:'Toca un trazo o nodo · arrastra nodos y jaladores',conv:'Toca un nodo: curva ↔ recta · arrástralo para sacar jaladores',add:'Toca sobre el trazo para añadir un nodo',del:'Toca un nodo para quitarlo'};
 
 /* ---------- geometría ---------- */
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -204,7 +212,7 @@ function draw(){
  world.setAttribute('transform',`translate(${view.ox} ${view.oy}) scale(${view.s})`);
  const k=1/view.s;let h='';drawRef();drawGrid(k);drawGuide(k);
  for(const p of doc.paths)h+=`<path d="${pathD(p)}" fill-rule="evenodd" fill="${p.fill}" stroke="${p.stroke}" stroke-width="${p.sw}" stroke-linejoin="round" stroke-linecap="round"/>`;
- if(sel&&doc.paths.includes(sel)){const A='#5b8cff',hs=5*k;
+ if(sel&&doc.paths.includes(sel)&&tool==='move')h+=moveBox(k);else if(sel&&doc.paths.includes(sel)){const A='#5b8cff',hs=5*k;
   const cx=cc();for(const i of visIdx(cx)){const n=cx.nodes[i];for(const w of['i','o']){const q=n[w];if(q[0]||q[1]){const hx=n.x+q[0],hy=n.y+q[1];h+=`<line x1="${n.x}" y1="${n.y}" x2="${hx}" y2="${hy}" stroke="${A}" stroke-width="${1.5*k}"/><circle cx="${hx}" cy="${hy}" r="${6*k}" fill="#fff" stroke="${A}" stroke-width="${1.8*k}"/>`}}}
   conts(sel).forEach(ct=>ct.nodes.forEach((n,i)=>{h+=`<rect x="${n.x-hs}" y="${n.y-hs}" width="${2*hs}" height="${2*hs}" fill="${(ct.nodes===cx.nodes&&i===selN)?A:'#fff'}" stroke="${A}" stroke-width="${1.8*k}"/>`}));
   if(cur&&cur.nodes.length>2){const f=cur.nodes[0];h+=`<circle cx="${f.x}" cy="${f.y}" r="${12*k}" fill="none" stroke="${A}" stroke-width="${1.5*k}" stroke-dasharray="${3*k} ${3*k}"/>`}}
@@ -227,7 +235,7 @@ const up=e=>{P.delete(e.pointerId);if(pinch){if(P.size<2){if(pinch.r)saveRef();p
 svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);
 svg.addEventListener('wheel',e=>{e.preventDefault();const s=Math.max(.05,Math.min(60,view.s*Math.exp(-e.deltaY*.0015)));view.ox=e.clientX-(e.clientX-view.ox)*s/view.s;view.oy=e.clientY-(e.clientY-view.oy)*s/view.s;view.s=s;draw()},{passive:false});
 
-function down(pt){const tol=18/view.s;g=null;if(refMove&&ref){g={t:'refmv',last:pt};return}
+function down(pt){const tol=18/view.s;g=null;if(pick){pickAt(pt);return}if(refMove&&ref){g={t:'refmv',last:pt};return}
  if(grid.snap&&!pend&&(tool==='pen'||tool==='line'))pt=sp(pt);
  if(pend){const B=hitPath(pt),op=pend;pend=null;if(B&&B!==sel&&B.closed)doBool(op,sel,B);else toast('Cancelado: toca otra forma cerrada');return}
  if(tool==='pen'){
@@ -237,6 +245,7 @@ function down(pt){const tol=18/view.s;g=null;if(refMove&&ref){g={t:'refmv',last:
   cur.nodes.push(n);sel=cur;selN=cur.nodes.length-1;g={t:'pen',n,m:false};ui()}
  else if(tool==='line'){const p={id:nid++,nodes:[mk(pt),mk(pt)],closed:false,fill:'none',stroke:style.stroke,sw:style.sw};doc.paths.push(p);sel=p;selN=1;g={t:'line',p,m:false};ui()}
  else if(tool==='add'){const h=hitNearest(pt,tol*1.2);if(h){sel=h.p;selH=h.c.nodes===h.p.nodes?null:h.c.nodes;selN=addNodeAt(h.c,h.si,h.t);commit()}else{sel=null;selN=-1;ui()}}
+ else if(tool==='move'){moveDown(pt,tol)}
  else if(tool==='del'){const h=nodeHit(pt,tol);if(h){sel=h.p;delNode(h.c,h.k)}else{sel=null;selN=-1;ui()}}
  else{
   if(sel){const c=cc();for(const k of visIdx(c)){const w=handleAt(c,k,pt,tol);if(w){g={t:'h',n:c.nodes[k],w,m:false};return}}}
@@ -248,13 +257,14 @@ function down(pt){const tol=18/view.s;g=null;if(refMove&&ref){g={t:'refmv',last:
 
 function drag(pt,e){const t=g.t;
  if(t==='refmv'){ref.x+=pt.x-g.last.x;ref.y+=pt.y-g.last.y;g.last=pt;draw();return}
- if(grid.snap&&t!=='pan'&&t!=='mv')pt=sp(pt);
+ if(grid.snap&&t!=='pan'&&t!=='mv'&&t!=='rot'&&t!=='scl')pt=sp(pt);
+ if(t==='rot'||t==='scl'){moveDrag(t,pt);draw();return}
  if(t==='pan'){view.ox+=e.clientX-g.last[0];view.oy+=e.clientY-g.last[1];g.last=[e.clientX,e.clientY];draw();return}
  if(t==='pen'||t==='cv'){const n=g.n,dx=pt.x-n.x,dy=pt.y-n.y;if(!g.m&&Math.hypot(dx,dy)*view.s<6)return;g.m=true;n.o=[dx,dy];n.i=[-dx,-dy];n.s=true}
  else if(t==='line'){const n=g.p.nodes[1];n.x=pt.x;n.y=pt.y;g.m=true}
  else if(t==='h'){const n=g.n;if(tool==='conv')n.s=false;setHandle(n,g.w,[pt.x-n.x,pt.y-n.y]);g.m=true}
  else if(t==='n'){const n=g.n;if(grid.snap){n.x=pt.x;n.y=pt.y}else{n.x+=pt.x-g.last.x;n.y+=pt.y-g.last.y}g.last=pt;g.m=true}
- else if(t==='mv'){const dx=pt.x-g.last.x,dy=pt.y-g.last.y;for(const n of g.p.nodes.concat(...(g.p.holes||[]))){n.x+=dx;n.y+=dy}g.last=pt;g.m=true}
+ else if(t==='mv'){let dx=pt.x-g.last.x,dy=pt.y-g.last.y;if(grid.snap&&tool==='move'&&g.b0){const q=sp({x:g.b0.x0+(pt.x-g.start.x),y:g.b0.y0+(pt.y-g.start.y)});dx=q.x-(g.b0.x0+g.tx);dy=q.y-(g.b0.y0+g.ty);g.tx+=dx;g.ty+=dy}for(const n of g.p.nodes.concat(...(g.p.holes||[]))){n.x+=dx;n.y+=dy}g.last=pt;g.m=true}
  draw()}
 
 function endG(cancel){if(!g)return;const q=g;g=null;
@@ -268,7 +278,7 @@ function endG(cancel){if(!g)return;const q=g;g=null;
 const COL=['#14161a','#ffffff','#e5484d','#f5a524','#f7d84a','#3fb27f','#5b8cff','#a06bd8'];
 const sty=$('#sty');let styOpen=false;
 const hasSel=()=>sel&&doc.paths.includes(sel);
-function setCol(key,c,live){style[key]=c;if(hasSel())sel[key]=c;if(live){draw();return}commit()}
+function setCol(key,c,live){style[key]=c;if(hasSel())sel[key]=c;if(live){draw();return}noteCol(c);commit()}
 function swRow(id,key){const box=$(id);
  COL.concat('none').forEach(c=>{const b=document.createElement('button');b.className='dot'+(c==='none'?' none':'');b.dataset.c=c;if(c!=='none')b.style.background=c;b.onclick=()=>setCol(key,c);box.appendChild(b)});
  const i=document.createElement('input');i.type='color';i.className='pick';i.value='#8fb3ff';i.oninput=()=>setCol(key,i.value,true);i.onchange=()=>setCol(key,i.value);box.appendChild(i)}
@@ -278,7 +288,7 @@ function updateSty(){const t=hasSel()?sel:style;
  $('#sw').value=t.sw;$('#swo').textContent=t.sw;
  const b=$('#stybtn');b.style.background=t.fill==='none'?'repeating-linear-gradient(45deg,#666 0 3px,#2a2d34 3px 6px)':t.fill;b.style.borderColor=t.stroke==='none'?'#33363d':t.stroke;
  sty.hidden=!styOpen;placeSty();placeFab();
- $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);syncRefUI();syncMirrorUI();syncGuideUI()}
+ $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI()}
 $('#stybtn').onclick=()=>{ctxPos=null;styOpen=!styOpen;updateSty()};
 $('#sw').oninput=e=>{const v=+e.target.value;style.sw=v;if(hasSel())sel.sw=v;$('#swo').textContent=v;draw()};
 $('#sw').onchange=()=>{if(hasSel())commit()};
@@ -525,7 +535,7 @@ let ctxPos=null,lastPT='touch',spaceHand=false;
 function placeSty(){if(ctxPos&&innerWidth>=600){const w=340;sty.style.width=w+'px';sty.style.right='auto';sty.style.bottom='auto';sty.style.left=Math.max(8,Math.min(innerWidth-w-8,ctxPos.x))+'px';sty.style.top=Math.max(8,Math.min(innerHeight-(sty.offsetHeight||300)-8,ctxPos.y))+'px'}
  else{sty.style.width='';sty.style.left='8px';sty.style.right='8px';sty.style.top='auto';sty.style.bottom=((botCol?0:$('.bot').offsetHeight)+8)+'px'}}
 function openCtx(x,y){ctxPos={x,y};styOpen=true;updateSty();placeSty()}
-const TK={'1':'pen','2':'line','3':'direct','4':'conv','5':'add','6':'del',p:'pen',l:'line',a:'direct',c:'conv','+':'add','=':'add','-':'del','_':'del'};
+const TK={'1':'pen','2':'line','3':'direct','4':'move','5':'conv','6':'add','7':'del',p:'pen',l:'line',a:'direct',v:'move',m:'move',c:'conv','+':'add','=':'add','-':'del','_':'del'};
 function handOff(){if(spaceHand){spaceHand=false;handOn=false;ui()}}
 addEventListener('keydown',e=>{const ae=document.activeElement;
  if(dlg.open||(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&!['range','checkbox','file'].includes(ae.type)))return;
@@ -534,15 +544,16 @@ addEventListener('keydown',e=>{const ae=document.activeElement;
  if(e.altKey)return;
  if(k===' '){e.preventDefault();if(ae&&ae.tagName==='BUTTON')ae.blur();if(!e.repeat&&!handOn){spaceHand=true;handOn=true;ui()}return}
  if(k==='Delete'||k==='Backspace'){e.preventDefault();if(!sel||!doc.paths.includes(sel))return;const c=cc();if(selN>=0&&selN<c.nodes.length)delNode(c,selN);else $('#trash').click();return}
- if(k==='Escape'){if(styOpen){styOpen=false;ctxPos=null;updateSty()}else if(pend){pend=null;toast('Cancelado')}else if(cur)finishCur();else if(sel){sel=null;selN=-1;ui();draw()}return}
+ if(k==='Escape'){if(styOpen){styOpen=false;ctxPos=null;updateSty()}else if(pend){pend=null;toast('Cancelado')}else if(pick){pick=null;toast('Cancelado')}else if(cur)finishCur();else if(sel){sel=null;selN=-1;ui();draw()}return}
  if(k==='Enter'){if(cur){e.preventDefault();finishCur()}return}
+ if(k==='i'||k==='I'){e.preventDefault();startPick(k==='I'?'stroke':'fill');return}
  const t=TK[k.toLowerCase()];if(t){e.preventDefault();document.querySelector(`#tools [data-t=${t}]`).click()}});
 addEventListener('keyup',e=>{if(e.key===' '){e.preventDefault();handOff()}});
 addEventListener('blur',handOff);
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b&&b.id!=='fin')b.blur()});
 {const T={undo:'Deshacer (Ctrl+Z)',redo:'Rehacer (Ctrl+Y)',fs:'Pantalla completa',trash:'Borrar forma (Supr)',hand:'Mano: mover el lienzo (mantén Espacio)',fin:'Terminar trazo (Enter)',close:'Cerrar trazo',dup:'Duplicar (Ctrl+D)',psave:'Guardar proyecto (Ctrl+S)'};
  for(const id in T)$('#'+id).title=T[id];
- const N={pen:'Pluma (1 · P)',line:'Línea (2 · L)',direct:'Nodos (3 · A)',conv:'Curva/Recta (4 · C)',add:'Agregar nodo (5 · +)',del:'Quitar nodo (6 · −)'};
+ const N={pen:'Pluma (1 · P)',line:'Línea (2 · L)',direct:'Nodos (3 · A)',move:'Mover, rotar y escalar (4 · V)',conv:'Convertir curva/recta (5 · C)',add:'Agregar nodo (6 · +)',del:'Quitar nodo (7 · −)'};
  document.querySelectorAll('#tools button').forEach(b=>b.title=N[b.dataset.t])}
 
 /* ---------- íconos para app (etapa 12) ---------- */
@@ -613,6 +624,51 @@ $('#xicons').onclick=async()=>{if(!doc.paths.some(p=>p.nodes.length>1)){dlg.clos
   F.push({name:'LEEME.txt',bytes:new TextEncoder().encode(ICON_README)});
   dl(makeZip(F),'plumita-icons.zip');dlg.close('x');toast('Assets listos: plumita-icons.zip'+(doc.w!==doc.h?' (el lienzo no es cuadrado: se centró con margen)':''))}
  catch(e){dlg.close('x');toast('No se pudieron generar los íconos')}};
+
+/* ---------- color, gotero y herramienta Mover (etapa 13) ---------- */
+let rec=[];try{rec=(JSON.parse(localStorage.getItem('vec-rec'))||[]).filter(c=>/^#[0-9a-f]{6}$/.test(c)).slice(0,16)}catch(e){}
+function noteCol(c){if(!/^#[0-9a-f]{6}$/i.test(c))return;c=c.toLowerCase();rec=[c,...rec.filter(x=>x!==c)].slice(0,16);try{localStorage.setItem('vec-rec',JSON.stringify(rec))}catch(e){}}
+let usedTarget='fill',usedKey='',pick=null;
+function usedList(){const s=new Set(rec);for(const p of doc.paths)for(const k of['fill','stroke'])if(/^#[0-9a-f]{6}$/i.test(p[k]))s.add(p[k].toLowerCase());return[...s].slice(0,24)}
+function syncColorUI(){const t=hasSel()?sel:style;
+ for(const[id,key]of[['#hexf','fill'],['#hexs','stroke']]){const el=$(id);if(document.activeElement!==el)el.value=t[key]}
+ $('#utf').classList.toggle('on',usedTarget==='fill');$('#uts').classList.toggle('on',usedTarget==='stroke');
+ const list=usedList(),key=list.join(',');if(key!==usedKey){usedKey=key;const box=$('#used');box.innerHTML='';
+  list.forEach(c=>{const b=document.createElement('button');b.className='dot';b.style.background=c;b.title=c;b.onclick=()=>setCol(usedTarget,c);box.appendChild(b)})}}
+$('#utf').onclick=()=>{usedTarget='fill';syncColorUI()};$('#uts').onclick=()=>{usedTarget='stroke';syncColorUI()};
+function parseHex(v){v=String(v).trim().toLowerCase().replace(/^#/,'');if(v==='none'||v==='ninguno')return'none';if(/^[0-9a-f]{3}$/.test(v))return'#'+[...v].map(x=>x+x).join('');if(/^[0-9a-f]{6}$/.test(v))return'#'+v;if(/^[0-9a-f]{8}$/.test(v))return'#'+v.slice(0,6);return null}
+[['#hexf','fill'],['#hexs','stroke']].forEach(([id,key])=>{const el=$(id);
+ el.addEventListener('change',()=>{const c=parseHex(el.value);if(!c){toast('Código no válido (ejemplo: #ff8000 o #f80)');syncColorUI();return}setCol(key,c);el.value=c;el.blur()});
+ el.addEventListener('keydown',e=>{if(e.key==='Enter')el.blur()})});
+let refCan=null,refCanSrc='';
+function refColor(pt){return new Promise(res=>{if(!ref||pt.x<ref.x||pt.y<ref.y||pt.x>ref.x+ref.w||pt.y>ref.y+ref.h)return res(null);
+ const go=()=>{try{const px=Math.min(refCan.width-1,Math.floor((pt.x-ref.x)/ref.w*refCan.width)),py=Math.min(refCan.height-1,Math.floor((pt.y-ref.y)/ref.h*refCan.height)),d=refCan.getContext('2d').getImageData(px,py,1,1).data;
+  res(d[3]<8?null:'#'+[0,1,2].map(i=>d[i].toString(16).padStart(2,'0')).join(''))}catch(e){res(null)}};
+ if(refCan&&refCanSrc===ref.src)return go();const im=new Image();im.onload=()=>{refCan=document.createElement('canvas');refCan.width=im.width;refCan.height=im.height;refCan.getContext('2d').drawImage(im,0,0);refCanSrc=ref.src;go()};im.onerror=()=>res(null);im.src=ref.src})}
+function startPick(k){finishCur();pick=k;styOpen=false;ctxPos=null;updateSty();toast(k==='fill'?'Toca el color que quieres para el relleno':'Toca el color que quieres para el contorno')}
+$('#dpf').onclick=()=>startPick('fill');$('#dps').onclick=()=>startPick('stroke');
+function pickAt(pt){const key=pick;pick=null;const p=hitPath(pt);let c=null;
+ if(p){c=p[key];if(c==='none')c=key==='fill'?p.stroke:p.fill;if(c==='none')c=null}
+ (c?Promise.resolve(c):refColor(pt)).then(c=>{if(!c){toast('Ahí no hay color que tomar');return}setCol(key,c);toast('Color tomado: '+c)})}
+/* Mover / rotar / escalar */
+const cloneP=p=>JSON.parse(JSON.stringify({nodes:p.nodes,holes:p.holes||[]}));
+function xformPath(p,o,m){const f=(n,s)=>{n.x=m[0]*s.x+m[2]*s.y+m[4];n.y=m[1]*s.x+m[3]*s.y+m[5];n.i=[m[0]*s.i[0]+m[2]*s.i[1],m[1]*s.i[0]+m[3]*s.i[1]];n.o=[m[0]*s.o[0]+m[2]*s.o[1],m[1]*s.o[0]+m[3]*s.o[1]]};
+ p.nodes.forEach((n,k)=>f(n,o.nodes[k]));(p.holes||[]).forEach((h,j)=>h.forEach((n,k)=>f(n,o.holes[j][k])))}
+function moveBox(k){const b=bounds(sel),cx=(b.x0+b.x1)/2,A='#5b8cff',hs=5*k,ry=b.y0-30*k;
+ let h=`<rect x="${b.x0}" y="${b.y0}" width="${b.x1-b.x0}" height="${b.y1-b.y0}" fill="none" stroke="${A}" stroke-width="${1.5*k}"/>`;
+ h+=`<line x1="${cx}" y1="${b.y0}" x2="${cx}" y2="${ry}" stroke="${A}" stroke-width="${1.5*k}"/><circle cx="${cx}" cy="${ry}" r="${7*k}" fill="#fff" stroke="${A}" stroke-width="${1.8*k}"/>`;
+ for(const[x,y]of[[b.x0,b.y0],[b.x1,b.y0],[b.x1,b.y1],[b.x0,b.y1]])h+=`<rect x="${x-hs}" y="${y-hs}" width="${2*hs}" height="${2*hs}" fill="#fff" stroke="${A}" stroke-width="${1.8*k}"/>`;
+ return h}
+function moveDown(pt,tol){
+ if(sel&&doc.paths.includes(sel)){const b=bounds(sel),cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2,C=[[b.x0,b.y0],[b.x1,b.y0],[b.x1,b.y1],[b.x0,b.y1]];
+  if(Math.hypot(pt.x-cx,pt.y-(b.y0-30/view.s))<tol*1.2){g={t:'rot',p:sel,o:cloneP(sel),c:[cx,cy],a0:Math.atan2(pt.y-cy,pt.x-cx),m:false};return}
+  for(let i=0;i<4;i++)if(Math.hypot(pt.x-C[i][0],pt.y-C[i][1])<tol){const an=C[(i+2)%4];g={t:'scl',p:sel,o:cloneP(sel),an,d0:Math.hypot(C[i][0]-an[0],C[i][1]-an[1])||1,m:false};return}}
+ const p=hitPath(pt);sel=p;selN=-1;selH=null;if(p)g={t:'mv',p,last:pt,start:pt,b0:bounds(p),tx:0,ty:0,m:false};ui();draw()}
+function moveDrag(t,pt){
+ if(t==='rot'){let a=Math.atan2(pt.y-g.c[1],pt.x-g.c[0])-g.a0;if(grid.snap)a=Math.round(a/(Math.PI/12))*(Math.PI/12);const co=Math.cos(a),si=Math.sin(a),[cx,cy]=g.c;xformPath(g.p,g.o,[co,si,-si,co,cx-co*cx+si*cy,cy-si*cx-co*cy])}
+ else{const f=Math.max(.05,Math.hypot(pt.x-g.an[0],pt.y-g.an[1])/g.d0),[ax,ay]=g.an;xformPath(g.p,g.o,[f,0,0,f,ax*(1-f),ay*(1-f)])}
+ g.m=true}
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 /* ---------- inicio ---------- */
 try{const s=JSON.parse(localStorage.getItem('vec-doc'));if(s&&s.paths)doc=s}catch(e){}

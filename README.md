@@ -20,7 +20,8 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 - **Pluma:** toca para poner nodos, arrastra para sacar jaladores y curvar, toca el primer nodo para cerrar la forma.
 - **Línea:** arrastra y suelta.
 - **Nodos:** mueve nodos, estira los jaladores para ajustar la curva, o arrastra el trazo completo.
-- **Curva/Recta:** convierte un nodo de punta a suave (y al revés). Si lo arrastras, saca jaladores.
+- **Mover:** selecciona una forma y arrástrala entera. Su caja trae un círculo arriba para **rotarla** y esquinas para **escalarla** (proporcional, con la esquina opuesta fija). Con el imán encendido, mueve a saltos de retícula y rota de 15° en 15°.
+- **Convertir:** convierte un nodo de punta a suave (y al revés). Si lo arrastras, saca jaladores.
 - **+ Nodo / − Nodo:** agrega un nodo sobre el trazo sin cambiar su forma, o quita uno.
 
 **Formas**
@@ -30,9 +31,16 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 - Duplicar, llevar al frente, mandar atrás.
 - **Espejo:** crea una copia reflejada de la forma seleccionada, de lado a lado (↔), de arriba a abajo (↕) o las tres copias de los cuatro cuadrantes (✛). El eje puede ser el **centro del lienzo** (ideal para dibujar una mitad y completar la otra) o el **borde de la forma** (la copia queda pegada). La copia es editable como cualquier otra, y los jaladores y huecos se reflejan con ella.
 
+**Color**
+- **Código hexadecimal:** escribe `#ff8000`, `ff8000` o `#f80` en relleno o contorno (también `none`).
+- **Usados:** fila con tus últimos colores (se guardan) y los colores del dibujo abierto, para reutilizar uno sin buscarlo en el selector.
+- **Cuentagotas:** toca el 💧 de relleno o contorno y luego cualquier forma: toma su color. Si tocas la **foto de referencia**, toma el color de ese punto de la foto.
+
 **Ayudas para trazar**
 - **Imagen de referencia:** carga una foto (por ejemplo, de un dibujo en papel) y trázala a mano. Opacidad ajustable; la mueves y escalas con un dedo y pellizco. No se exporta.
 - **Retícula** de 10, 20, 25, 50 o 100 px, con **imán** para que pluma, línea, nodos y jaladores salten a las intersecciones.
+- **Guía de ícono** (no se exporta): marca la zona visible y el círculo seguro de **Android** (ícono adaptativo, 108 dp con 72 dp visibles y 66 dp seguros) y la máscara de esquinas de **Apple**.
+- **Exportar assets para app:** un `.zip` con `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png` (180×180, con fondo sólido) y `favicon.ico` (16, 32 y 48 px), más un `LEEME.txt` con las líneas listas para pegar en tu HTML y tu manifest.
 
 <table>
   <tr>
@@ -62,7 +70,7 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 
 ## Cómo usarlo
 
-1. Descarga `vectores.html`.
+1. Descarga `vectplumita.html`.
 2. Ábrelo en el navegador (probado en Chrome para Android).
 3. Listo. No hay nada que instalar.
 
@@ -77,6 +85,10 @@ o 1. En linea [Plumita en GitHub pages](https://mialmoga.github.io/Plumita/)
 | Exportar | Mismo botón: *Descargar SVG* o *Descargar PNG* |
 | Cambiar color, grosor, capas, imagen o retícula | Toca el cuadrito de color (arriba) |
 | Editar o soltar un hueco | Herramienta *Nodos*: toca un nodo del hueco y edítalo como cualquier otro. Para separarlo, panel de color → *Soltar hueco* |
+| Mover, rotar o escalar una forma | Herramienta *Mover*: arrastra la forma, el círculo de arriba (rotar) o una esquina (escalar) |
+| Tomar un color de otra forma o de la foto | Panel de color → *Gotero* → toca el color |
+| Usar un color exacto | Panel de color → *Código*: escribe el hexadecimal |
+| Hacer los íconos de una app | Activa la *Guía ícono*, dibuja dentro de la zona segura y exporta con *Exportar assets para app* (botón del tamaño del lienzo) |
 | Hacer una copia espejo | Selecciona la forma, abre el panel de color y toca *Espejo*; elige el *Eje* (lienzo o forma) |
 | Sumar o restar | Selecciona una forma cerrada con *Nodos*, abre el panel de color, toca *Sumar* o *Restar* y luego toca la otra forma |
 | Mover imagen de referencia | Panel de color → *Mover*, y arrastra o pellizca |
@@ -89,7 +101,8 @@ Pensado para el teléfono, pero también se lleva bien con una computadora:
 
 | Acción | Atajo |
 |---|---|
-| Pluma, Línea, Nodos, Curva/Recta, + Nodo, − Nodo | `1` a `6` (en el orden de los botones), o `P` `L` `A` `C` `+` `-` |
+| Pluma, Línea, Nodos, Mover, Convertir, + Nodo, − Nodo | `1` a `7` (en el orden de los botones), o `P` `L` `A` `V` `C` `+` `-` |
+| Cuentagotas de relleno / de contorno | `I` / `Shift+I` |
 | Deshacer / Rehacer | `Ctrl+Z` / `Ctrl+Y` (o `Ctrl+Shift+Z`) |
 | Duplicar la forma | `Ctrl+D` |
 | Guardar proyecto | `Ctrl+S` |
@@ -115,11 +128,15 @@ Los botones muestran su atajo al pasar el cursor por encima.
   <tr>
     <td align="center"><img src="docs/img/exportando.jpeg" width="240" alt="Descarga del archivo en el teléfono"><br><sub>Exportando desde el teléfono</sub></td>
     <td align="center"><img src="docs/img/resultado.png" width="240" alt="PNG final creado con la herramienta"><br><sub>El PNG final, hecho con Plumita</sub></td>
-      <td align="center"><img src="docs/img/resultado.svg" width="240" alt="PNG final creado con la herramienta"><br><sub>El SGV final, hecho con Plumita</sub></td>
+      <td align="center"><img src="docs/img/resultado.svg" width="240" alt="PNG final creado con la herramienta"><br><sub>El SVG final, hecho con Plumita</sub></td>
   </tr>
 </table>
 
 ---
+
+## Instalar y usar sin internet
+
+Plumita es una PWA: con el `site.webmanifest` se puede instalar desde el navegador y abrir como app, y con `sw.js` sigue funcionando **sin conexión**. El service worker usa *red primero*: si hay internet siempre carga la versión más reciente y el caché solo entra como respaldo. En cada release sube el número de `VERSION` en `sw.js` para limpiar cachés viejos. Los service workers solo funcionan sobre `https` (como GitHub Pages) o `localhost`, no abriendo el archivo directo.
 
 ## Privacidad
 
