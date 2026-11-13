@@ -75,9 +75,11 @@ dialog{max-height:92vh;overflow:auto}
 .seg{display:flex;gap:4px;flex:1;min-width:0}
 .seg button{flex:1;min-width:0;height:36px;padding:0 2px;font-size:12px}
 .seg button.on{background:var(--acc);border-color:var(--acc);color:#fff}
-#lnd summary{cursor:pointer;color:var(--dim);font-size:12px;padding:8px 0;list-style:none}
-#lnd summary::before{content:'▸ '}#lnd[open] summary::before{content:'▾ '}
-#lnd .srow>span{width:74px}
+#lnd summary,#ald summary{cursor:pointer;color:var(--dim);font-size:12px;padding:8px 0;list-style:none}
+#lnd summary::before,#ald summary::before{content:'▸ '}#lnd[open] summary::before,#ald[open] summary::before{content:'▾ '}
+#lnd .srow>span,#ald .srow>span{width:74px}
+.seg svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;pointer-events:none}
+#dsg button{font-size:11px}
 html{scrollbar-width:thin;scrollbar-color:#4a4f5a transparent}
 @supports not (scrollbar-color:auto){
  ::-webkit-scrollbar{width:10px;height:10px}
@@ -142,6 +144,19 @@ html{scrollbar-width:thin;scrollbar-color:#4a4f5a transparent}
  <div class="srow"><span>Eje</span><button id="axl">Lienzo</button><button id="axf">Forma</button></div>
  <div class="srow"><span>Guía ícono</span><button id="gand">Android</button><button id="gios">Apple</button></div>
  <div class="srow"><span>Suavizado</span><input type="range" id="psm" min="1" max="30" step="1"><output id="psmo"></output></div>
+ <details id="ald"><summary>Alinear y distribuir</summary>
+  <div class="srow"><span>Alinear</span><div class="seg" id="alg">
+   <button data-a="l" title="Izquierda"><svg viewBox="0 0 24 24"><path d="M4 3v18"/><rect x="8" y="6" width="12" height="4"/><rect x="8" y="14" width="8" height="4"/></svg></button>
+   <button data-a="ch" title="Centro horizontal"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><rect x="5" y="6" width="14" height="4"/><rect x="8" y="14" width="8" height="4"/></svg></button>
+   <button data-a="r" title="Derecha"><svg viewBox="0 0 24 24"><path d="M20 3v18"/><rect x="6" y="6" width="12" height="4"/><rect x="10" y="14" width="8" height="4"/></svg></button>
+   <button data-a="t" title="Arriba"><svg viewBox="0 0 24 24"><path d="M3 4h18"/><rect x="6" y="8" width="4" height="12"/><rect x="14" y="8" width="4" height="8"/></svg></button>
+   <button data-a="cv" title="Centro vertical"><svg viewBox="0 0 24 24"><path d="M3 12h18"/><rect x="6" y="5" width="4" height="14"/><rect x="14" y="8" width="4" height="8"/></svg></button>
+   <button data-a="b" title="Abajo"><svg viewBox="0 0 24 24"><path d="M3 20h18"/><rect x="6" y="4" width="4" height="12"/><rect x="14" y="8" width="4" height="8"/></svg></button>
+  </div></div>
+  <div class="srow"><span>Distribuir</span><div class="seg" id="dsg"><button data-d="h|gap" title="Espaciado igual horizontal">↔ Espacio</button><button data-d="v|gap" title="Espaciado igual vertical">↕ Espacio</button><button data-d="h|c" title="Centros iguales horizontal">↔ Centros</button><button data-d="v|c" title="Centros iguales vertical">↕ Centros</button></div></div>
+  <div class="srow"><span>Respecto a</span><div class="seg" id="alr"><button data-v="auto" title="Una forma: el lienzo. Varias: entre ellas">Auto</button><button data-v="canvas">Lienzo</button><button data-v="sel">Selección</button></div></div>
+  <div class="srow"><span>Medir</span><div class="seg" id="alm"><button data-v="1">Con contorno</button><button data-v="0">Solo forma</button></div></div>
+ </details>
  <div class="srow"><span>Grupo</span><button id="grp">Agrupar</button><button id="ugrp">Desagrupar</button></div>
  <div class="srow"><span>Hueco</span><button id="hrel">Soltar hueco</button></div>
  <div class="srow"><span>Formas</span><button id="badd">Sumar</button><button id="bsub">Restar</button></div>
@@ -320,7 +335,7 @@ function updateSty(){const t=hasSel()?sel:style;
  $('#sw').value=t.sw;$('#swo').textContent=t.sw;
  const b=$('#stybtn');b.style.background=t.fill==='none'?'repeating-linear-gradient(45deg,#666 0 3px,#2a2d34 3px 6px)':t.fill;b.style.borderColor=t.stroke==='none'?'#33363d':t.stroke;
  sty.hidden=!styOpen;placeSty();placeFab();
- $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=$('#bint').disabled=$('#bxor').disabled=$('#bdiv').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=$('#o2s').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);{const T=targets();$('#grp').disabled=!(T.length>1&&!T.every(p=>p.gid&&p.gid===T[0].gid));$('#ugrp').disabled=!T.some(p=>p.gid)}syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI();syncLineUI()}
+ $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=$('#bint').disabled=$('#bxor').disabled=$('#bdiv').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=$('#o2s').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);{const T=targets();$('#grp').disabled=!(T.length>1&&!T.every(p=>p.gid&&p.gid===T[0].gid));$('#ugrp').disabled=!T.some(p=>p.gid)}syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI();syncLineUI();syncAlignUI()}
 $('#stybtn').onclick=()=>{ctxPos=null;styOpen=!styOpen;updateSty()};
 $('#sw').oninput=e=>{const v=+e.target.value;style.sw=v;for(const p of targets())p.sw=v;$('#swo').textContent=v;draw()};
 $('#sw').onchange=()=>{if(hasSel())commit()};
@@ -912,6 +927,35 @@ $('#o2s').onclick=()=>{finishCur();const ts=targets();if(!ts.length)return;const
   const outs=shapes.map(s=>{const o={id:nid++,nodes:s.nodes,closed:true,fill:p.stroke,stroke:'none',sw:0};if(s.holes.length)o.holes=s.holes;if(lv(p,'so')<1)o.fo=lv(p,'so');if(p.gid)o.gid=p.gid;return o});
   const i=doc.paths.indexOf(p);if(p.fill!=='none'){p.stroke='none';for(const k of['join','cap','dash','align','so'])delete p[k];doc.paths.splice(i+1,0,...outs)}else doc.paths.splice(i,1,...outs);made.push(...outs)}
  setSel(made);commit();toast('Contorno convertido en forma')};
+
+/* ---------- alinear y distribuir (etapa 18) ---------- */
+let alTo='auto',alStroke=true;try{const a=JSON.parse(localStorage.getItem('vec-al'));if(a){alTo=['auto','canvas','sel'].includes(a.to)?a.to:'auto';alStroke=a.stroke!==false}}catch(e){}
+function saveAl(){try{localStorage.setItem('vec-al',JSON.stringify({to:alTo,stroke:alStroke}))}catch(e){}}
+function unitsOf(ts){const g=new Map(),us=[];for(const p of ts){if(p.gid){if(!g.has(p.gid)){const u={paths:[]};g.set(p.gid,u);us.push(u)}g.get(p.gid).paths.push(p)}else us.push({paths:[p]})}return us}
+function visBounds(p){const b=bounds(p);if(alStroke&&p.stroke!=='none'&&(p.sw||0)>0){const a=p.closed?lv(p,'align'):'center',e=a==='inside'?0:a==='outside'?p.sw:p.sw/2;b.x0-=e;b.y0-=e;b.x1+=e;b.y1+=e}return b}
+function unitBox(u){const r={x0:1e9,y0:1e9,x1:-1e9,y1:-1e9};for(const p of u.paths){const b=visBounds(p);r.x0=Math.min(r.x0,b.x0);r.y0=Math.min(r.y0,b.y0);r.x1=Math.max(r.x1,b.x1);r.y1=Math.max(r.y1,b.y1)}return r}
+function shiftUnit(u,dx,dy){for(const p of u.paths)for(const n of p.nodes.concat(...(p.holes||[]))){n.x+=dx;n.y+=dy}}
+function alignTo(mode){finishCur();const ts=targets();if(!ts.length)return;const us=unitsOf(ts).map(u=>({u,b:unitBox(u)})),toCanvas=alTo==='canvas'||(alTo==='auto'&&us.length===1);
+ const R=toCanvas?{x0:0,y0:0,x1:doc.w,y1:doc.h}:{x0:Math.min(...us.map(o=>o.b.x0)),y0:Math.min(...us.map(o=>o.b.y0)),x1:Math.max(...us.map(o=>o.b.x1)),y1:Math.max(...us.map(o=>o.b.y1))};
+ let moved=0;for(const o of us){const b=o.b;let dx=0,dy=0;
+  if(mode==='l')dx=R.x0-b.x0;else if(mode==='ch')dx=(R.x0+R.x1)/2-(b.x0+b.x1)/2;else if(mode==='r')dx=R.x1-b.x1;
+  else if(mode==='t')dy=R.y0-b.y0;else if(mode==='cv')dy=(R.y0+R.y1)/2-(b.y0+b.y1)/2;else dy=R.y1-b.y1;
+  if(Math.abs(dx)>1e-9||Math.abs(dy)>1e-9){shiftUnit(o.u,dx,dy);moved++}}
+ if(moved)commit();else toast('Ya estaba alineado')}
+function distribute(axis,mode){finishCur();const us=unitsOf(targets()).map(u=>({u,b:unitBox(u)}));if(us.length<3){toast('Selecciona 3 o más objetos para distribuir');return}
+ const X=axis==='h',lo=b=>X?b.x0:b.y0,hi=b=>X?b.x1:b.y1,mid=b=>(lo(b)+hi(b))/2,n=us.length,pos=[];
+ if(mode==='gap'){us.sort((a,b)=>lo(a.b)-lo(b.b));const f=us[0].b,l=us.reduce((m,o)=>hi(o.b)>m?hi(o.b):m,-1e9),sum=us.reduce((a,o)=>a+hi(o.b)-lo(o.b),0),gap=(l-lo(f)-sum)/(n-1);let x=lo(f);for(const o of us){pos.push(x);x+=hi(o.b)-lo(o.b)+gap}}
+ else{us.sort((a,b)=>mid(a.b)-mid(b.b));const c0=mid(us[0].b),c1=mid(us[n-1].b);us.forEach((o,i)=>pos.push(c0+(c1-c0)*i/(n-1)-(hi(o.b)-lo(o.b))/2))}
+ let moved=0;us.forEach((o,i)=>{const d=pos[i]-lo(o.b);if(Math.abs(d)>1e-9){shiftUnit(o.u,X?d:0,X?0:d);moved++}});
+ if(moved)commit();else toast('Ya estaba distribuido')}
+function syncAlignUI(){const us=unitsOf(targets()).length;
+ document.querySelectorAll('#alg button').forEach(b=>b.disabled=!us);document.querySelectorAll('#dsg button').forEach(b=>b.disabled=us<3);
+ document.querySelectorAll('#alr button').forEach(b=>b.classList.toggle('on',b.dataset.v===alTo));
+ document.querySelectorAll('#alm button').forEach(b=>b.classList.toggle('on',(b.dataset.v==='1')===alStroke))}
+$('#alg').onclick=e=>{const b=e.target.closest('button');if(b)alignTo(b.dataset.a)};
+$('#dsg').onclick=e=>{const b=e.target.closest('button');if(b){const[ax,m]=b.dataset.d.split('|');distribute(ax,m==='gap'?'gap':'c')}};
+$('#alr').onclick=e=>{const b=e.target.closest('button');if(b){alTo=b.dataset.v;saveAl();syncAlignUI()}};
+$('#alm').onclick=e=>{const b=e.target.closest('button');if(b){alStroke=b.dataset.v==='1';saveAl();syncAlignUI()}};
 
 /* ---------- inicio ---------- */
 try{const s=JSON.parse(localStorage.getItem('vec-doc'));if(s&&s.paths)doc=s}catch(e){}

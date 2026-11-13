@@ -23,6 +23,7 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 - **Nodos:** mueve nodos, estira los jaladores para ajustar la curva, o arrastra el trazo completo.
 - **Mover:** selecciona una forma y arrástrala entera. Su caja trae un círculo arriba para **rotarla** y esquinas para **escalarla** (proporcional, con la esquina opuesta fija). Con el imán encendido, mueve a saltos de retícula y rota de 15° en 15°.
 - **Selección múltiple y grupos:** el botón ☑ (flotante, a la derecha) permite sumar o quitar formas de la selección con un toque. Con la herramienta Mover, **mantén pulsado y arrastra** para seleccionar todo lo que vayas tocando a tu paso. **Agrupar** y **Desagrupar** (panel de color) hacen que varias formas se comporten como una: se seleccionan juntas y se mueven, rotan, escalan, duplican, espejan, borran, recolorean y reordenan en bloque. Los grupos se guardan en los proyectos; en el SVG exportado quedan aplanados.
+- **Alinear y distribuir** (panel de color → *Alinear y distribuir*): alinea a la izquierda, al centro o a la derecha, y arriba, al centro o abajo. Con **una** forma seleccionada alinea al lienzo; con **varias**, entre ellas; el selector *Respecto a* permite forzar *Lienzo* o *Selección*. **Distribuir** (3 o más objetos) reparte con **espaciado igual** o **centros iguales**, horizontal o vertical, dejando fijos los objetos de los extremos. Un **grupo cuenta como un solo objeto**, y puedes elegir medir **con contorno** (lo que ves) o **solo la forma**. Se puede deshacer.
 - **Convertir:** convierte un nodo de punta a suave (y al revés). Si lo arrastras, saca jaladores.
 - **± Nodo:** toca un nodo para quitarlo, o toca el trazo en un tramo para agregar uno sin cambiar su forma.
 
@@ -90,6 +91,7 @@ o 1. En linea [Plumita en GitHub pages](https://mialmoga.github.io/Plumita/)
 | Cambiar color, grosor, capas, imagen o retícula | Toca el cuadrito de color (arriba) |
 | Editar o soltar un hueco | Herramienta *Nodos*: toca un nodo del hueco y edítalo como cualquier otro. Para separarlo, panel de color → *Soltar hueco* |
 | Seleccionar varias formas | Botón ☑ y toca cada forma; o con *Mover*, mantén pulsado y desliza sobre ellas |
+| Alinear o distribuir | Panel de color → *Alinear y distribuir*; selecciona las formas y toca el botón |
 | Agrupar o desagrupar | Panel de color → fila *Grupo* |
 | Mover, rotar o escalar una forma | Herramienta *Mover*: arrastra la forma, el círculo de arriba (rotar) o una esquina (escalar) |
 | Tomar un color de otra forma o de la foto | Panel de color → *Gotero* → toca el color |
