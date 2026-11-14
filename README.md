@@ -24,6 +24,7 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 - **Mover:** selecciona una forma y arrástrala entera. Su caja trae un círculo arriba para **rotarla** y esquinas para **escalarla** (proporcional, con la esquina opuesta fija). Con el imán encendido, mueve a saltos de retícula y rota de 15° en 15°.
 - **Selección múltiple y grupos:** el botón ☑ (flotante, a la derecha) permite sumar o quitar formas de la selección con un toque. Con la herramienta Mover, **mantén pulsado y arrastra** para seleccionar todo lo que vayas tocando a tu paso. **Agrupar** y **Desagrupar** (panel de color) hacen que varias formas se comporten como una: se seleccionan juntas y se mueven, rotan, escalan, duplican, espejan, borran, recolorean y reordenan en bloque. Los grupos se guardan en los proyectos; en el SVG exportado quedan aplanados.
 - **Alinear y distribuir** (panel de color → *Alinear y distribuir*): alinea a la izquierda, al centro o a la derecha, y arriba, al centro o abajo. Con **una** forma seleccionada alinea al lienzo; con **varias**, entre ellas; el selector *Respecto a* permite forzar *Lienzo* o *Selección*. **Distribuir** (3 o más objetos) reparte con **espaciado igual** o **centros iguales**, horizontal o vertical, dejando fijos los objetos de los extremos. Un **grupo cuenta como un solo objeto**, y puedes elegir medir **con contorno** (lo que ves) o **solo la forma**. Se puede deshacer.
+- **Capas** (botón flotante ▤): capas reales, tipo carpeta, de una sola profundidad. Cada capa tiene nombre editable (✎), ojo para **ocultar**, candado para **bloquear** y su lista de objetos (miniatura, nombre, ojo y candado propios). Lo **oculto** no se ve, no se puede tocar y **no se exporta**; lo **bloqueado** se ve y se exporta pero no se selecciona (ideal para la foto de referencia o un fondo; Ctrl+A y la selección continua lo saltan). Se reordena arrastrando con el asa ≡ o con ▲ y ▼, tanto capas como objetos, y un objeto se puede soltar sobre otra capa. **+ Capa**, **Duplicar** y **Borrar** (con confirmación si tiene objetos; siempre queda al menos una), y **Mover aquí** pasa lo seleccionado a la capa activa. Todo lo que dibujes nace en la capa activa, que cambia sola cuando seleccionas un objeto. En el SVG exportado cada capa sale como un `<g>` con su nombre, y los proyectos antiguos abren con una sola «Capa 1».
 - **Convertir:** convierte un nodo de punta a suave (y al revés). Si lo arrastras, saca jaladores.
 - **± Nodo:** toca un nodo para quitarlo, o toca el trazo en un tramo para agregar uno sin cambiar su forma.
 
@@ -91,6 +92,7 @@ o 1. En linea [Plumita en GitHub pages](https://mialmoga.github.io/Plumita/)
 | Cambiar color, grosor, capas, imagen o retícula | Toca el cuadrito de color (arriba) |
 | Editar o soltar un hueco | Herramienta *Nodos*: toca un nodo del hueco y edítalo como cualquier otro. Para separarlo, panel de color → *Soltar hueco* |
 | Seleccionar varias formas | Botón ☑ y toca cada forma; o con *Mover*, mantén pulsado y desliza sobre ellas |
+| Ocultar, bloquear, renombrar o reordenar capas y objetos | Botón ▤ (flotante, a la derecha) |
 | Alinear o distribuir | Panel de color → *Alinear y distribuir*; selecciona las formas y toca el botón |
 | Agrupar o desagrupar | Panel de color → fila *Grupo* |
 | Mover, rotar o escalar una forma | Herramienta *Mover*: arrastra la forma, el círculo de arriba (rotar) o una esquina (escalar) |
@@ -172,6 +174,7 @@ Todo vive en un solo archivo, organizado por secciones comentadas: geometría, h
 - Las booleanas funcionan sobre formas **cerradas**. Dos formas que comparten un borde exactamente coincidente pueden dar un resultado inesperado.
 - Al **importar SVG** se omiten texto, imágenes, máscaras y filtros; los degradados quedan en gris sólido. Se leen esquinas, extremos, guiones y opacidad (los guiones se aproximan al más parecido de los cuatro tipos). Un SVG muy grande se reduce para caber en el lienzo (máximo 8000 px) y uno muy pequeño, como un ícono, se amplía.
 - **Contorno a forma** aproxima el resultado con curvas de Bézier ajustadas (error de décimas de unidad), no es el desplazamiento matemático exacto; en trazos muy gruesos sobre curvas muy cerradas puede convenir revisar los nodos.
+- Las capas son de un solo nivel (no hay subcapas); los grupos viven dentro de una capa, y un grupo con objetos en capas distintas se selecciona entero pero solo con lo que esté visible y desbloqueado.
 - Los grupos son planos (no hay grupos dentro de grupos) y las operaciones de pathfinder piden una sola forma, así que desagrupa antes de usarlas.
 - No hay degradados, texto, ni panel de capas con nombres.
 - La pantalla completa depende del navegador; Safari en iPhone no la permite en páginas web.
