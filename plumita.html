@@ -75,9 +75,16 @@ dialog{max-height:92vh;overflow:auto}
 .seg{display:flex;gap:4px;flex:1;min-width:0}
 .seg button{flex:1;min-width:0;height:36px;padding:0 2px;font-size:12px}
 .seg button.on{background:var(--acc);border-color:var(--acc);color:#fff}
-#lnd summary,#ald summary,#syd summary{cursor:pointer;color:var(--dim);font-size:12px;padding:8px 0;list-style:none}
-#lnd summary::before,#ald summary::before,#syd summary::before{content:'▸ '}#lnd[open] summary::before,#ald[open] summary::before,#syd[open] summary::before{content:'▾ '}
-#lnd .srow>span,#ald .srow>span,#syd .srow>span{width:74px}
+#lnd summary,#ald summary,#syd summary,#gdd summary{cursor:pointer;color:var(--dim);font-size:12px;padding:8px 0;list-style:none}
+#lnd summary::before,#ald summary::before,#syd summary::before,#gdd summary::before{content:'▸ '}#lnd[open] summary::before,#ald[open] summary::before,#syd[open] summary::before,#gdd[open] summary::before{content:'▾ '}
+#lnd .srow>span,#ald .srow>span,#syd .srow>span,#gdd .srow>span{width:74px}
+#gdd .srow>button{flex:1}
+.gst{display:flex;gap:6px;align-items:center;margin:4px 0}
+.gst input[type=color]{width:34px;height:34px;padding:0;border-radius:8px;flex:none}
+.gst input[type=range]{flex:1;width:auto;min-width:0;height:30px;padding:0;background:none;border:0}
+.gst .ga{flex:none;width:64px}
+.gst button{min-width:30px;width:30px;height:30px;padding:0;flex:none}
+.hint2{color:var(--dim);font-size:12px;padding:4px 2px}
 #syd .srow>button{flex:1}
 #syd .srow>button.on{background:var(--acc);border-color:var(--acc);color:#fff}
 #symr{flex:none!important;padding:0 8px}
@@ -173,6 +180,12 @@ html{scrollbar-width:thin;scrollbar-color:#4a4f5a transparent}
  <div class="srow"><span>Eje</span><button id="axl">Lienzo</button><button id="axf">Forma</button></div>
  <div class="srow"><span>Guía ícono</span><button id="gand">Android</button><button id="gios">Apple</button></div>
  <div class="srow"><span>Suavizado</span><input type="range" id="psm" min="1" max="30" step="1"><output id="psmo"></output></div>
+ <details id="gdd"><summary>Degradado</summary>
+  <div class="srow"><span>Aplicar a</span><div class="seg" id="gdt"><button data-v="fill">Relleno</button><button data-v="stroke">Contorno</button></div></div>
+  <div class="srow"><span>Tipo</span><div class="seg" id="gdk"><button data-v="s">Sólido</button><button data-v="l">Lineal</button><button data-v="r">Radial</button></div></div>
+  <div id="gdl"></div>
+  <div class="srow"><button id="gdadd">+ Parada</button><button id="gdinv">Invertir</button><button id="gdrst" title="Devuelve el degradado a su posición inicial">Restablecer</button></div>
+ </details>
  <details id="ald"><summary>Alinear y distribuir</summary>
   <div class="srow"><span>Alinear</span><div class="seg" id="alg">
    <button data-a="l" title="Izquierda"><svg viewBox="0 0 24 24"><path d="M4 3v18"/><rect x="8" y="6" width="12" height="4"/><rect x="8" y="14" width="8" height="4"/></svg></button>
@@ -288,7 +301,7 @@ function draw(){
  world.setAttribute('transform',`translate(${view.ox} ${view.oy}) scale(${view.s})`);
  const k=1/view.s;let h='';drawRef();drawGrid(k);drawGuide(k);
  refresh();doc.paths.forEach((p,i)=>{if(pvis(p))h+=pathMarkup(p,'a'+i)});
- if(doc.sym&&doc.sym.on)h+=symGuides(k);if((tool==='pen'||tool==='pencil')&&!(g&&g.t==='pencil'))h+=endRings(k);if(g&&g.t==='pencil'&&g.pts.length>1)h+=pencilPreview(k);if(hasSel()&&targets().length>1)h+=selOutlines(k);
+ if(doc.sym&&doc.sym.on)h+=symGuides(k);if(gdOpen&&hasSel()&&sel[gKey()])h+=gradHandles(k);if((tool==='pen'||tool==='pencil')&&!(g&&g.t==='pencil'))h+=endRings(k);if(g&&g.t==='pencil'&&g.pts.length>1)h+=pencilPreview(k);if(hasSel()&&targets().length>1)h+=selOutlines(k);
  if(sel&&doc.paths.includes(sel)&&tool==='move')h+=moveBox(k);else if(sel&&doc.paths.includes(sel)){const A='#5b8cff',hs=5*k;
   const cx=cc();for(const i of visIdx(cx)){const n=cx.nodes[i];for(const w of['i','o']){const q=n[w];if(q[0]||q[1]){const hx=n.x+q[0],hy=n.y+q[1];h+=`<line x1="${n.x}" y1="${n.y}" x2="${hx}" y2="${hy}" stroke="${A}" stroke-width="${1.5*k}"/><circle cx="${hx}" cy="${hy}" r="${6*k}" fill="#fff" stroke="${A}" stroke-width="${1.8*k}"/>`}}}
   conts(sel).forEach(ct=>ct.nodes.forEach((n,i)=>{h+=`<rect x="${n.x-hs}" y="${n.y-hs}" width="${2*hs}" height="${2*hs}" fill="${(ct.nodes===cx.nodes&&i===selN)?A:'#fff'}" stroke="${A}" stroke-width="${1.8*k}"/>`}));
@@ -312,7 +325,8 @@ const up=e=>{P.delete(e.pointerId);if(pinch){if(P.size<2){if(pinch.r)saveRef();p
 svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);
 svg.addEventListener('wheel',e=>{e.preventDefault();const s=Math.max(.05,Math.min(60,view.s*Math.exp(-e.deltaY*.0015)));view.ox=e.clientX-(e.clientX-view.ox)*s/view.s;view.oy=e.clientY-(e.clientY-view.oy)*s/view.s;view.s=s;draw()},{passive:false});
 
-function down(pt){const tol=18/view.s;g=null;if(doc.sym&&doc.sym.on&&!pick&&!(refMove&&ref)){const sc=symTransforms().c;if(Math.hypot(pt.x-sc[0],pt.y-sc[1])<tol*.9){g={t:'symc'};return}}if(tool!=='move')msel=[];if(pick){pickAt(pt);return}if((tool==='pen'||tool==='pencil'||tool==='line')&&drawBlocked())return;if(refMove&&ref){g={t:'refmv',last:pt};return}
+function down(pt){const tol=18/view.s;g=null;if(doc.sym&&doc.sym.on&&!pick&&!(refMove&&ref)){const sc=symTransforms().c;if(Math.hypot(pt.x-sc[0],pt.y-sc[1])<tol*.9){g={t:'symc'};return}}if(gdOpen&&hasSel()&&sel[gKey()]&&!pick){const gg=sel[gKey()];for(let i=0;i<2;i++)if(Math.hypot(pt.x-gg.pts[i][0],pt.y-gg.pts[i][1])<tol){g={t:'gh',i,p:sel,m:false};return}}
+ if(tool!=='move')msel=[];if(pick){pickAt(pt);return}if((tool==='pen'||tool==='pencil'||tool==='line')&&drawBlocked())return;if(refMove&&ref){g={t:'refmv',last:pt};return}
  if(grid.snap&&!pend&&(tool==='pen'||tool==='line'))pt=sp(pt);
  if(pend){const B=hitPath(pt),op=pend;pend=null;if(B&&B!==sel&&B.closed)doBool(op,sel,B);else toast('Cancelado: toca otra forma cerrada');return}
  if(tool==='pen'){
@@ -335,6 +349,7 @@ function down(pt){const tol=18/view.s;g=null;if(doc.sym&&doc.sym.on&&!pick&&!(re
  draw()}
 
 function drag(pt,e){const t=g.t;
+ if(t==='gh'){const q=grid.snap?sp(pt):pt;g.p[gKey()].pts[g.i]=[q.x,q.y];g.m=true;draw();return}
  if(t==='symc'){const q=grid.snap?sp(pt):pt;doc.sym.cx=q.x;doc.sym.cy=q.y;draw();return}
  if(t==='pencil'){const list=(e&&e.getCoalescedEvents)?e.getCoalescedEvents():[];const pts=list.length?list.map(toDoc):[pt];for(const q of pts){const l=g.pts[g.pts.length-1];if(Math.hypot(q.x-l[0],q.y-l[1])*view.s>=2){g.pts.push([q.x,q.y]);g.m=true}}draw();return}
  if(t==='refmv'){ref.x+=pt.x-g.last.x;ref.y+=pt.y-g.last.y;g.last=pt;draw();return}
@@ -349,11 +364,11 @@ function drag(pt,e){const t=g.t;
  else if(t==='n'){const n=g.n;if(grid.snap){n.x=pt.x;n.y=pt.y}else{n.x+=pt.x-g.last.x;n.y+=pt.y-g.last.y}g.last=pt;g.m=true}
  else if(t==='mv'){if(lp&&Math.hypot(pt.x-g.start.x,pt.y-g.start.y)*view.s>10){clearTimeout(lp);lp=null}
  if(tool==='move'&&!g.armed){if(Math.hypot(pt.x-g.start.x,pt.y-g.start.y)*view.s<6)return;g.armed=true;g.tx=0;g.ty=0}
- let dx=pt.x-g.last.x,dy=pt.y-g.last.y;if(grid.snap&&tool==='move'&&g.b0){const q=sp({x:g.b0.x0+(pt.x-g.start.x),y:g.b0.y0+(pt.y-g.start.y)});dx=q.x-(g.b0.x0+g.tx);dy=q.y-(g.b0.y0+g.ty);g.tx+=dx;g.ty+=dy}for(const p of(g.ps||[g.p]))for(const n of p.nodes.concat(...(p.holes||[]))){n.x+=dx;n.y+=dy}g.last=pt;g.m=true}
+ let dx=pt.x-g.last.x,dy=pt.y-g.last.y;if(grid.snap&&tool==='move'&&g.b0){const q=sp({x:g.b0.x0+(pt.x-g.start.x),y:g.b0.y0+(pt.y-g.start.y)});dx=q.x-(g.b0.x0+g.tx);dy=q.y-(g.b0.y0+g.ty);g.tx+=dx;g.ty+=dy}for(const p of(g.ps||[g.p])){for(const n of p.nodes.concat(...(p.holes||[]))){n.x+=dx;n.y+=dy}gshift(p,dx,dy)}g.last=pt;g.m=true}
  draw()}
 
 function endG(cancel){if(lp){clearTimeout(lp);lp=null}if(!g)return;const q=g;g=null;
- if(q.t==='pan')return;if(q.t==='symc'){commit();return}if(q.t==='pencil'){finishPencil(q,cancel);return}if(q.t==='refmv'){saveRef();return}if(q.t==='brush'||q.t==='idle'){ui();draw();return}if(q.t==='mv'&&q.tg&&!q.m){toggleSel(q.tg);ui();draw();return}
+ if(q.t==='pan')return;if(q.t==='gh'){if(q.m)commit();else{ui();draw()}return}if(q.t==='symc'){commit();return}if(q.t==='pencil'){finishPencil(q,cancel);return}if(q.t==='refmv'){saveRef();return}if(q.t==='brush'||q.t==='idle'){ui();draw();return}if(q.t==='mv'&&q.tg&&!q.m){toggleSel(q.tg);ui();draw();return}
  if(q.t==='line'){const[a,b]=q.p.nodes;if(!q.m||dist(a,b)*view.s<8){doc.paths=doc.paths.filter(x=>x!==q.p);sel=null;selN=-1;ui();draw()}else commit();return}
  if(q.t==='pen'){commit();return}
  if(q.t==='cv'){if(!q.m&&!cancel){const n=q.n;if(n.o[0]||n.o[1]||n.i[0]||n.i[1]){n.o=[0,0];n.i=[0,0];n.s=false}else autoSmooth(q.p,q.k);commit()}else if(q.m)commit();return}
@@ -363,7 +378,7 @@ function endG(cancel){if(lp){clearTimeout(lp);lp=null}if(!g)return;const q=g;g=n
 const COL=['#14161a','#ffffff','#e5484d','#f5a524','#f7d84a','#3fb27f','#5b8cff','#a06bd8'];
 const sty=$('#sty');let styOpen=false;
 const hasSel=()=>sel&&doc.paths.includes(sel);
-function setCol(key,c,live){style[key]=c;for(const p of targets())p[key]=c;if(live){draw();return}noteCol(c);commit()}
+function setCol(key,c,live){style[key]=c;for(const p of targets()){p[key]=c;if(key==='fill')delete p.gf;else if(key==='stroke')delete p.gs}if(live){draw();return}noteCol(c);commit()}
 function swRow(id,key){const box=$(id);
  COL.concat('none').forEach(c=>{const b=document.createElement('button');b.className='dot'+(c==='none'?' none':'');b.dataset.c=c;if(c!=='none')b.style.background=c;b.onclick=()=>setCol(key,c);box.appendChild(b)});
  const i=document.createElement('input');i.type='color';i.className='pick';i.value='#8fb3ff';i.oninput=()=>setCol(key,i.value,true);i.onchange=()=>setCol(key,i.value);box.appendChild(i)}
@@ -373,7 +388,7 @@ function updateSty(){if(styOpen&&layOpen){layOpen=false;$('#lay').hidden=true}if
  $('#sw').value=t.sw;$('#swo').textContent=t.sw;
  const b=$('#stybtn');b.style.background=t.fill==='none'?'repeating-linear-gradient(45deg,#666 0 3px,#2a2d34 3px 6px)':t.fill;b.style.borderColor=t.stroke==='none'?'#33363d':t.stroke;
  sty.hidden=!styOpen;placeSty();placeFab();
- $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=$('#bint').disabled=$('#bxor').disabled=$('#bdiv').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=$('#o2s').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);{const T=targets();$('#grp').disabled=!(T.length>1&&!T.every(p=>p.gid&&p.gid===T[0].gid));$('#ugrp').disabled=!T.some(p=>p.gid)}syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI();syncLineUI();syncAlignUI();syncSymUI()}
+ $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=$('#bint').disabled=$('#bxor').disabled=$('#bdiv').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=$('#o2s').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);{const T=targets();$('#grp').disabled=!(T.length>1&&!T.every(p=>p.gid&&p.gid===T[0].gid));$('#ugrp').disabled=!T.some(p=>p.gid)}syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI();syncLineUI();syncAlignUI();syncSymUI();syncGradUI()}
 $('#stybtn').onclick=()=>{ctxPos=null;styOpen=!styOpen;updateSty()};
 $('#sw').oninput=e=>{const v=+e.target.value;style.sw=v;for(const p of targets())p.sw=v;$('#swo').textContent=v;draw()};
 $('#sw').onchange=()=>{if(hasSel())commit()};
@@ -442,7 +457,7 @@ $('#badd').onclick=()=>startOp('add');$('#bsub').onclick=()=>startOp('sub');$('#
 function doBool(op,A,B){let r;try{r=bool(op,A,B)}catch(e){r=null}
  if(!r){toast('No se pudo: las formas no se tocan');draw();return}
  const ia=doc.paths.indexOf(A),ib=doc.paths.indexOf(B),idx=Math.min(ia,ib);
- const mkOut=(rs,src)=>{const outs=rs.outer.map(nodes=>inheritLine({id:nid++,nodes,closed:true,fill:src.fill,stroke:src.stroke,sw:src.sw,ly:src.ly},src));if(outs.length&&rs.holes.length)outs[0].holes=rs.holes;return outs};
+ const mkOut=(rs,src)=>{const outs=rs.outer.map(nodes=>cpg(inheritLine({id:nid++,nodes,closed:true,fill:src.fill,stroke:src.stroke,sw:src.sw,ly:src.ly},src),src));if(outs.length&&rs.holes.length)outs[0].holes=rs.holes;return outs};
  let outs=[];
  if(r.parts){const top=ia>ib?A:B;for(const pt of r.parts)outs.push(...mkOut(pt.r,pt.k==='A'?A:pt.k==='B'?B:top))}
  else outs=mkOut(r,A);
@@ -505,7 +520,7 @@ function cleanProject(o){if(!o||o.app!=='plumita'||!o.doc||!Array.isArray(o.doc.
  if(!layers.length){layers.push({id:1,name:'Capa 1',vis:true,lock:false});lids.add(1)}
  const paths=[];for(const p of o.doc.paths){if(p&&p.sc!==undefined)continue;const nodes=cleanNodes(p&&p.nodes);if(!nodes||!nodes.length)continue;
   const q={id:nid+paths.length,nodes,closed:!!p.closed,fill:okCol(p.fill)?p.fill:'none',stroke:okCol(p.stroke)?p.stroke:'#14161a',sw:fin2(p.sw)?Math.max(0,Math.min(200,p.sw)):4};
-  if(Array.isArray(p.holes)){const hs=p.holes.map(cleanNodes).filter(Boolean);if(hs.length)q.holes=hs}if(fin2(p.gid)&&p.gid>0)q.gid=Math.floor(p.gid);for(const[k,vals]of Object.entries({join:['miter','bevel'],cap:['butt','square'],dash:['dash','dot','dashdot'],align:['inside','outside']}))if(vals.includes(p[k]))q[k]=p[k];for(const k of['fo','so'])if(fin2(p[k])&&p[k]<1)q[k]=Math.max(0,Math.min(1,p[k]));q.ly=(fin2(p.ly)&&lids.has(Math.floor(p.ly)))?Math.floor(p.ly):layers[layers.length-1].id;if(p.sm===true)q.sm=true;if(p.hid===true)q.hid=true;if(p.lk===true)q.lk=true;if(typeof p.nm==='string'&&p.nm.trim())q.nm=p.nm.slice(0,60);paths.push(q)}
+  if(Array.isArray(p.holes)){const hs=p.holes.map(cleanNodes).filter(Boolean);if(hs.length)q.holes=hs}if(fin2(p.gid)&&p.gid>0)q.gid=Math.floor(p.gid);for(const[k,vals]of Object.entries({join:['miter','bevel'],cap:['butt','square'],dash:['dash','dot','dashdot'],align:['inside','outside']}))if(vals.includes(p[k]))q[k]=p[k];for(const k of['fo','so'])if(fin2(p[k])&&p[k]<1)q[k]=Math.max(0,Math.min(1,p[k]));q.ly=(fin2(p.ly)&&lids.has(Math.floor(p.ly)))?Math.floor(p.ly):layers[layers.length-1].id;{const g1=cleanGrad(p.gf),g2=cleanGrad(p.gs);if(g1)q.gf=g1;if(g2)q.gs=g2}if(p.sm===true)q.sm=true;if(p.hid===true)q.hid=true;if(p.lk===true)q.lk=true;if(typeof p.nm==='string'&&p.nm.trim())q.nm=p.nm.slice(0,60);paths.push(q)}
  let rf=null;const r=o.ref;if(r&&typeof r.src==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(r.src)&&[r.x,r.y,r.w,r.h,r.op].every(fin2))rf={src:r.src,x:r.x,y:r.y,w:r.w,h:r.h,op:Math.max(.05,Math.min(1,r.op))};
  const sy=o.doc.sym||{},sym={on:!!sy.on,kind:['v','h','q','r'].includes(sy.kind)?sy.kind:'v',n:fin2(sy.n)?Math.max(2,Math.min(24,Math.round(sy.n))):6,refl:sy.refl!==false,cx:fin2(sy.cx)?sy.cx:null,cy:fin2(sy.cy)?sy.cy:null,ang:fin2(sy.ang)?Math.max(-90,Math.min(90,sy.ang)):0};
  const g=o.grid||{};return{doc:{w:Math.round(w),h:Math.round(h),paths,sym,layers,al:(fin2(o.doc.al)&&lids.has(Math.floor(o.doc.al)))?Math.floor(o.doc.al):layers[layers.length-1].id},ref:rf,grid:{on:!!g.on,snap:!!g.snap,size:[10,20,25,50,100].includes(g.size)?g.size:50}}}
@@ -583,27 +598,43 @@ function shapeD(el,tag){const a=n=>parseFloat(el.getAttribute(n))||0;
  if(tag==='line')return`M${a('x1')} ${a('y1')}L${a('x2')} ${a('y2')}`;
  if(tag==='polyline'||tag==='polygon'){const v=(el.getAttribute('points')||'').trim().split(/[\s,]+/).map(Number);if(v.length<4||!v.every(fin2))return null;let d='M'+v[0]+' '+v[1];for(let i=2;i+1<v.length;i+=2)d+='L'+v[i]+' '+v[i+1];return d+(tag==='polygon'?'Z':'')}
  return null}
+function subBounds(subs){let a=1e9,b=1e9,c=-1e9,d=-1e9;const up=(x,y)=>{if(x<a)a=x;if(x>c)c=x;if(y<b)b=y;if(y>d)d=y};for(const s of subs){up(s.sx,s.sy);for(const g of s.segs){up(g[0],g[1]);up(g[2],g[3]);up(g[4],g[5])}}return{x0:a,y0:b,x1:c,y1:d}}
+const urlId=v=>{const m=/^url\(\s*['"]?#([^'")\s]+)['"]?\s*\)/.exec(String(v==null?'':v).trim());return m?m[1]:null};
+function svgGrad(gmap,css,id){const el=gmap[id];if(!el)return null;const chain=[];let e=el;for(let n=0;e&&n<8;n++){chain.push(e);const h=e.getAttribute('href')||e.getAttribute('xlink:href');e=h&&h[0]==='#'?gmap[h.slice(1)]:null}
+ const A=n=>{for(const x of chain){const v=x.getAttribute(n);if(v!=null)return v}return null};
+ let ss=[];for(const x of chain){ss=[...x.children].filter(c=>c.localName==='stop');if(ss.length)break}if(!ss.length)return null;
+ const stops=ss.map(s=>{const st=elStyle(s,css),d=cssDecl(s.getAttribute('style')||''),col=s.getAttribute('stop-color')||d['stop-color']||st['stop-color']||'#000000',op=s.getAttribute('stop-opacity')??d['stop-opacity']??st['stop-opacity']??1;
+  let off=String(s.getAttribute('offset')||'0').trim();off=off.endsWith('%')?parseFloat(off)/100:parseFloat(off);const c=normCol(col,'#000000');
+  return{o:Math.max(0,Math.min(1,fin2(off)?off:0)),c:c==='none'?'#000000':c,a:Math.max(0,Math.min(1,fin2(parseFloat(op))?parseFloat(op):1))}}).sort((a,b)=>a.o-b.o);
+ if(stops.length===1)stops.push({...stops[0],o:1});return{t:el.localName==='radialGradient'?'r':'l',A,stops}}
+function gradFromSvg(gmap,css,id,M,bb){const gi=svgGrad(gmap,css,id);if(!gi)return null;const A=gi.A,obb=(A('gradientUnits')||'objectBoundingBox')!=='userSpaceOnUse',GT=parseTf(A('gradientTransform')),W=bb.x1-bb.x0||1,Hh=bb.y1-bb.y0||1;
+ const num=(n,d)=>{let v=A(n);if(v==null)return d;v=String(v).trim();return v.endsWith('%')?parseFloat(v)/100:parseFloat(v)},ap=(m,x,y)=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],
+  toDoc=(x,y)=>{let q=ap(GT,x,y);if(obb)q=[bb.x0+q[0]*W,bb.y0+q[1]*Hh];return ap(M,q[0],q[1])};let pts;
+ if(gi.t==='l'){pts=[toDoc(num('x1',0),num('y1',0)),toDoc(num('x2',obb?1:0),num('y2',0))]}
+ else{const cx=num('cx',.5),cy=num('cy',.5),r=num('r',.5),C=toDoc(cx,cy),R1=toDoc(cx+r,cy),R2=toDoc(cx,cy+r),rr=(Math.hypot(R1[0]-C[0],R1[1]-C[1])+Math.hypot(R2[0]-C[0],R2[1]-C[1]))/2;pts=[C,[C[0]+rr,C[1]]]}
+ if(!pts.flat().every(fin2))return null;return{t:gi.t,pts,s:gi.stops}}
 function svgToProject(txt){svgApprox=0;svgNote='';let skip=0,total=0;
  const dom=new DOMParser().parseFromString(txt,'image/svg+xml');if(dom.querySelector('parsererror'))return null;const root=dom.documentElement;if(!root||root.localName!=='svg')return null;
  const vb=(root.getAttribute('viewBox')||'').trim().split(/[\s,]+/).map(Number);let W,Hh,mx=0,my=0;
  if(vb.length===4&&vb.every(fin2)&&vb[2]>0&&vb[3]>0){mx=vb[0];my=vb[1];W=vb[2];Hh=vb[3]}else{W=parseFloat(root.getAttribute('width'))||1080;Hh=parseFloat(root.getAttribute('height'))||1080}
  let k=1;const big=Math.max(W,Hh);if(big<200)k=1080/big;if(big*k>8000)k=8000/big;
  const css={};dom.querySelectorAll('style').forEach(s=>Object.assign(css,parseCss(s.textContent)));
+ const gmap={};dom.querySelectorAll('linearGradient,radialGradient').forEach(g=>{const id=g.getAttribute('id');if(id)gmap[id]=g});
  const out=[],SKIPT=['defs','clipPath','mask','symbol','marker','pattern','style','title','desc','metadata','linearGradient','radialGradient','script','namedview','filter'];
- function add(d,M,cur){let subs;try{subs=parseD(d)}catch(e){skip++;return}if(cur.fill==='none'&&cur.stroke==='none')return;
+ function add(d,M,cur){let subs;try{subs=parseD(d)}catch(e){skip++;return}if(cur.fill==='none'&&cur.stroke==='none')return;const bb=subBounds(subs);
   const sw=cur.stroke==='none'?0:cur.sw*Math.sqrt(Math.abs(M[0]*M[3]-M[1]*M[2])),arr=subs.map(s=>({nodes:subNodes(s,M),closed:s.closed})).filter(a=>a.nodes);
-  const mk2=(a,holes)=>{total+=a.nodes.length;if(total>60000)throw 1;const p={nodes:a.nodes,closed:a.closed,fill:cur.fill,stroke:cur.stroke,sw};Object.assign(p,cur.ln);{const fo=cur.fop*cur.op,so=cur.sop*cur.op;if(fo<1)p.fo=Math.max(0,fo);if(so<1)p.so=Math.max(0,so)}if(holes&&holes.length)p.holes=holes;out.push(p)};
+  const mk2=(a,holes)=>{total+=a.nodes.length;if(total>60000)throw 1;const p={nodes:a.nodes,closed:a.closed,fill:cur.fill,stroke:cur.stroke,sw};Object.assign(p,cur.ln);if(cur.fref){const gg=gradFromSvg(gmap,css,cur.fref,M,bb);if(gg)p.gf=gg}if(cur.sref){const gg=gradFromSvg(gmap,css,cur.sref,M,bb);if(gg)p.gs=gg}{const fo=cur.fop*cur.op,so=cur.sop*cur.op;if(fo<1)p.fo=Math.max(0,fo);if(so<1)p.so=Math.max(0,so)}if(holes&&holes.length)p.holes=holes;out.push(p)};
   if(cur.fill!=='none'&&arr.length>1&&arr.every(a=>a.closed)){const ar=arr.map(a=>Math.abs(area(polyOf(segsOf(a.nodes))))),mi=ar.indexOf(Math.max(...ar)),main=arr[mi],poly=polyOf(segsOf(main.nodes)),holes=[],rest=[];
    arr.forEach((a,j)=>{if(j!==mi)(inPoly(poly,[a.nodes[0].x,a.nodes[0].y])?holes:rest).push(a)});mk2(main,holes.map(h=>h.nodes));rest.forEach(a=>mk2(a))}
   else arr.forEach(a=>mk2(a))}
  function walk(el,M,inh){for(const ch of el.children){const tag=ch.localName;if(SKIPT.includes(tag))continue;if(['text','image','use','foreignObject','switch'].includes(tag)){skip++;continue}
   const st=elStyle(ch,css);if(st.display==='none'||st.visibility==='hidden')continue;const M2=mmul(M,parseTf(ch.getAttribute('transform')));
-  const cur={fill:normCol(st.fill,inh.fill),stroke:normCol(st.stroke,inh.stroke),sw:st['stroke-width']!=null?parseFloat(st['stroke-width']):inh.sw};if(st['fill-opacity']==='0')cur.fill='none';if(!fin2(cur.sw))cur.sw=inh.sw;
+  const fu=urlId(st.fill),su=urlId(st.stroke),gf0=fu&&svgGrad(gmap,css,fu),gs0=su&&svgGrad(gmap,css,su),cur={fref:st.fill==null?inh.fref:(gf0?fu:null),sref:st.stroke==null?inh.sref:(gs0?su:null),fill:gf0?gf0.stops[0].c:normCol(st.fill,inh.fill),stroke:gs0?gs0.stops[0].c:normCol(st.stroke,inh.stroke),sw:st['stroke-width']!=null?parseFloat(st['stroke-width']):inh.sw};if(st['fill-opacity']==='0')cur.fill='none';if(!fin2(cur.sw))cur.sw=inh.sw;
   {const ln=Object.assign({},inh.ln),lj=st['stroke-linejoin'],lc=st['stroke-linecap'],da=st['stroke-dasharray'];if(lj)ln.join=({'miter-clip':'miter',arcs:'miter'})[lj]||lj;if(lc)ln.cap=lc;
    if(da!==undefined){const v=String(da).trim()==='none'?[]:String(da).split(/[\s,]+/).map(parseFloat).filter(fin2);ln.dash=!v.length?'solid':v[0]<=cur.sw*.3?(v.length>2?'dashdot':'dot'):'dash'}
    const num=(x,d)=>x!=null&&fin2(parseFloat(x))?parseFloat(x):d;cur.ln=ln;cur.op=inh.op*num(st.opacity,1);cur.fop=num(st['fill-opacity'],inh.fop);cur.sop=num(st['stroke-opacity'],inh.sop)}
   if(tag==='g'||tag==='a'){walk(ch,M2,cur);continue}const d=shapeD(ch,tag);if(d)add(d,M2,cur)}}
- try{walk(root,[k,0,0,k,-mx*k,-my*k],{fill:'#000000',stroke:'none',sw:1,ln:{},op:1,fop:1,sop:1})}catch(e){svgNote='El SVG es demasiado complejo para importarlo';return null}
+ try{walk(root,[k,0,0,k,-mx*k,-my*k],{fill:'#000000',stroke:'none',sw:1,ln:{},op:1,fop:1,sop:1,fref:null,sref:null})}catch(e){svgNote='El SVG es demasiado complejo para importarlo';return null}
  if(!out.length){svgNote='El SVG no tiene formas compatibles';return null}
  svgNote='SVG importado'+(skip?` (se omitieron ${skip} elemento${skip>1?'s':''} no compatible${skip>1?'s':''}: texto, imágenes…)`:'')+(svgApprox?' · los degradados quedaron en gris':'');
  return cleanProject({app:'plumita',doc:{w:Math.max(16,Math.round(W*k)),h:Math.max(16,Math.round(Hh*k)),paths:out},grid:{...grid}})}
@@ -615,7 +646,7 @@ function bounds(p){let a=1e9,b=1e9,c=-1e9,e=-1e9;const up=(x,y)=>{a=Math.min(a,x
  for(const[n0,n1]of segList(p)){const q=segPts(n0,n1);for(let j=0;j<=16;j++){const t=bzAt(q,j/16);up(t[0],t[1])}}for(const n of p.nodes)up(n.x,n.y);return{x0:a,y0:b,x1:c,y1:e}}
 function reflect(p,ax,ay){const c=JSON.parse(JSON.stringify(p));c.id=nid++;
  const f=n=>{if(ax!=null){n.x=2*ax-n.x;n.i[0]=-n.i[0];n.o[0]=-n.o[0]}if(ay!=null){n.y=2*ay-n.y;n.i[1]=-n.i[1];n.o[1]=-n.o[1]}};
- c.nodes.forEach(f);(c.holes||[]).forEach(h=>h.forEach(f));return c}
+ c.nodes.forEach(f);(c.holes||[]).forEach(h=>h.forEach(f));{const m=[ax!=null?-1:1,0,0,ay!=null?-1:1,ax!=null?2*ax:0,ay!=null?2*ay:0];if(c.gf)c.gf=gxf(c.gf,m);if(c.gs)c.gs=gxf(c.gs,m)}return c}
 function mirror(kind){finishCur();const ts=targets();if(!ts.length)return;const b=boundsAll(ts),W=doc.w,H=doc.h,lz=mAxis==='lienzo',
  ax=lz?W/2:((b.x0+b.x1)/2<W/2?b.x1:b.x0),ay=lz?H/2:((b.y0+b.y1)/2<H/2?b.y1:b.y0),batches=[];
  const mk=(x,y)=>{const gm={};return ts.map(p=>{const c=reflect(p,x,y);if(p.gid){gm[p.gid]=gm[p.gid]||nextGid();c.gid=gm[p.gid]}else delete c.gid;return c})};
@@ -627,7 +658,7 @@ $('#axl').onclick=()=>{mAxis='lienzo';syncMirrorUI()};$('#axf').onclick=()=>{mAx
 
 /* ---------- huecos editables (etapa 10) ---------- */
 $('#hrel').onclick=()=>{if(!hasSel()||!(sel.holes&&sel.holes.length))return;const c=cc(),rel=c.nodes!==sel.nodes?[c.nodes]:sel.holes.slice();
- const out=rel.map(nodes=>inheritLine({id:nid++,nodes,closed:true,fill:sel.fill,stroke:sel.stroke,sw:sel.sw,ly:sel.ly},sel));
+ const out=rel.map(nodes=>cpg(inheritLine({id:nid++,nodes,closed:true,fill:sel.fill,stroke:sel.stroke,sw:sel.sw,ly:sel.ly},sel),sel));
  sel.holes=sel.holes.filter(h=>!rel.includes(h));if(!sel.holes.length)delete sel.holes;
  const i=doc.paths.indexOf(sel);doc.paths.splice(i+1,0,...out);sel=out[out.length-1];selN=-1;selH=null;commit();
  toast(out.length>1?'Huecos soltados como formas independientes':'Hueco soltado como forma independiente')};
@@ -753,9 +784,9 @@ function pickAt(pt){const key=pick;pick=null;const p=hitPath(pt,true);let c=null
  if(p){c=p[key];if(c==='none')c=key==='fill'?p.stroke:p.fill;if(c==='none')c=null}
  (c?Promise.resolve(c):refColor(pt)).then(c=>{if(!c){toast('Ahí no hay color que tomar');return}setCol(key,c);toast('Color tomado: '+c)})}
 /* Mover / rotar / escalar */
-const cloneP=p=>JSON.parse(JSON.stringify({nodes:p.nodes,holes:p.holes||[]}));
+const cloneP=p=>JSON.parse(JSON.stringify({nodes:p.nodes,holes:p.holes||[],gf:p.gf,gs:p.gs}));
 function xformPath(p,o,m){const f=(n,s)=>{n.x=m[0]*s.x+m[2]*s.y+m[4];n.y=m[1]*s.x+m[3]*s.y+m[5];n.i=[m[0]*s.i[0]+m[2]*s.i[1],m[1]*s.i[0]+m[3]*s.i[1]];n.o=[m[0]*s.o[0]+m[2]*s.o[1],m[1]*s.o[0]+m[3]*s.o[1]]};
- p.nodes.forEach((n,k)=>f(n,o.nodes[k]));(p.holes||[]).forEach((h,j)=>h.forEach((n,k)=>f(n,o.holes[j][k])))}
+ p.nodes.forEach((n,k)=>f(n,o.nodes[k]));(p.holes||[]).forEach((h,j)=>h.forEach((n,k)=>f(n,o.holes[j][k])));if(o.gf)p.gf=gxf(o.gf,m);if(o.gs)p.gs=gxf(o.gs,m)}
 /* ---------- selección múltiple y grupos (etapa 14) ---------- */
 let lp=null,multiOn=false,lastShift=false,msel=[],gcount=0;
 const groupOf=p=>p.gid?doc.paths.filter(x=>x.gid===p.gid):[p];
@@ -793,7 +824,7 @@ $('#grp').onclick=()=>{const ts=targets();if(ts.length<2)return;const id=nextGid
  const idx=Math.max(...ts.map(p=>doc.paths.indexOf(p))),rest=doc.paths.filter(p=>!ts.includes(p)),pos=doc.paths.slice(0,idx).filter(p=>!ts.includes(p)).length;rest.splice(pos,0,...ts);doc.paths=rest;setSel(ts);commit();toast('Agrupadas '+ts.length+' formas')};
 $('#ugrp').onclick=()=>{const ts=targets();if(!ts.some(p=>p.gid))return;ts.forEach(p=>{delete p.gid});setSel(ts);commit();toast('Grupo deshecho')};
 $('#trash').onclick=()=>{const ts=targets();if(!ts.length)return;doc.paths=doc.paths.filter(x=>!ts.includes(x));if(ts.includes(cur))cur=null;sel=null;msel=[];selN=-1;commit()};
-$('#dup').onclick=()=>{const ts=targets();if(!ts.length)return;const gm={},cp=ts.map(p=>{const c=JSON.parse(JSON.stringify(p));c.id=nid++;c.nodes.concat(...(c.holes||[])).forEach(n=>{n.x+=24;n.y+=24});if(p.gid){gm[p.gid]=gm[p.gid]||nextGid();c.gid=gm[p.gid]}return c});doc.paths.push(...cp);setSel(cp);commit()};
+$('#dup').onclick=()=>{const ts=targets();if(!ts.length)return;const gm={},cp=ts.map(p=>{const c=JSON.parse(JSON.stringify(p));c.id=nid++;c.nodes.concat(...(c.holes||[])).forEach(n=>{n.x+=24;n.y+=24});gshift(c,24,24);if(p.gid){gm[p.gid]=gm[p.gid]||nextGid();c.gid=gm[p.gid]}return c});doc.paths.push(...cp);setSel(cp);commit()};
 $('#fwd').onclick=()=>{const ts=targets();if(!ts.length)return;doc.paths=doc.paths.filter(x=>!ts.includes(x)).concat(ts);commit()};
 $('#bck').onclick=()=>{const ts=targets();if(!ts.length)return;doc.paths=ts.concat(doc.paths.filter(x=>!ts.includes(x)));commit()};
 
@@ -847,16 +878,16 @@ function finishPencil(q,cancel){const raw=q.pts;if(raw.length<3||(cancel&&raw.le
 const LD={join:'round',cap:'round',dash:'solid',align:'center',fo:1,so:1},LKEYS=Object.keys(LD);
 const lv=(p,k)=>p[k]===undefined?LD[k]:p[k];
 function inheritLine(p,src){src=src||style;for(const k of LKEYS)if(src[k]!==undefined&&src[k]!==LD[k])p[k]=src[k];return p}
-function pathMarkup(p,uid){const d=pathD(p),w=p.sw||0,fo=lv(p,'fo'),so=lv(p,'so'),dash=lv(p,'dash'),join=lv(p,'join');let cap=lv(p,'cap'),da='';const u=Math.max(w,1);
+function pathMarkup(p,uid){const d=pathD(p),w=p.sw||0,fo=lv(p,'fo'),so=lv(p,'so'),dash=lv(p,'dash'),join=lv(p,'join');let cap=lv(p,'cap'),da='';const u=Math.max(w,1),GF=p.gf?`url(#gf${uid})`:p.fill,GS=p.gs?`url(#gs${uid})`:p.stroke,defs=(p.gf?gradDef(p.gf,'gf'+uid):'')+(p.gs?gradDef(p.gs,'gs'+uid):'');
  if(dash==='dash')da=`${3*u} ${2*u}`;else if(dash==='dot'){da=`0.01 ${2*u}`;cap='round'}else if(dash==='dashdot'){da=`${3*u} ${1.6*u} 0.01 ${1.6*u}`;cap='round'}
  const has=p.stroke!=='none'&&w>0,sa=`stroke-linejoin="${join}" stroke-linecap="${cap}"${da?` stroke-dasharray="${da}"`:''}${join==='miter'?' stroke-miterlimit="10"':''}${so<1?` stroke-opacity="${so}"`:''}`,
-  fa=`fill-rule="evenodd" fill="${p.fill}"${fo<1?` fill-opacity="${fo}"`:''}`,al=(p.closed&&has)?lv(p,'align'):'center';
- if(al==='center'||!has)return`<path d="${d}" ${fa} stroke="${p.stroke}" stroke-width="${w}" ${sa}/>`;
- const fp=p.fill!=='none'?`<path d="${d}" ${fa} stroke="none"/>`:'',st=`<path d="${d}" fill="none" stroke="${p.stroke}" stroke-width="${2*w}" ${sa}`;
- if(al==='inside')return`<clipPath id="c${uid}"><path d="${d}" clip-rule="evenodd"/></clipPath>${fp}${st} clip-path="url(#c${uid})"/>`;
+  fa=`fill-rule="evenodd" fill="${GF}"${fo<1?` fill-opacity="${fo}"`:''}`,al=(p.closed&&has)?lv(p,'align'):'center';
+ if(al==='center'||!has)return`${defs}<path d="${d}" ${fa} stroke="${GS}" stroke-width="${w}" ${sa}/>`;
+ const fp=p.fill!=='none'?`<path d="${d}" ${fa} stroke="none"/>`:'',st=`<path d="${d}" fill="none" stroke="${GS}" stroke-width="${2*w}" ${sa}`;
+ if(al==='inside')return`${defs}<clipPath id="c${uid}"><path d="${d}" clip-rule="evenodd"/></clipPath>${fp}${st} clip-path="url(#c${uid})"/>`;
  const bb=bounds(p),mg=(join==='miter'?10:2)*w+2,mx=+(bb.x0-mg).toFixed(2),my=+(bb.y0-mg).toFixed(2),mw=+(bb.x1-bb.x0+2*mg).toFixed(2),mh=+(bb.y1-bb.y0+2*mg).toFixed(2);
  const same=Math.sign(area(polyOf(segsOf(p.nodes))))===Math.sign(area([[0,0],[1,0],[1,1],[0,1]])),rect=same?`M${mx} ${my}v${mh}h${mw}v${-mh}z`:`M${mx} ${my}h${mw}v${mh}h${-mw}z`;
- return`<clipPath id="o${uid}"><path d="${rect}${d}" clip-rule="evenodd"/></clipPath>${fp}${st} clip-path="url(#o${uid})"/>`}
+ return`${defs}<clipPath id="o${uid}"><path d="${rect}${d}" clip-rule="evenodd"/></clipPath>${fp}${st} clip-path="url(#o${uid})"/>`}
 function lineSet(k,v,live){style[k]=v;for(const p of targets()){if(v===LD[k])delete p[k];else p[k]=v}if(live){draw();return}commit()}
 function syncLineUI(){const t=hasSel()?sel:style;
  document.querySelectorAll('#lnd .seg').forEach(box=>{const v=lv(t,box.dataset.k);box.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v))});
@@ -964,8 +995,8 @@ $('#o2s').onclick=()=>{finishCur();const ts=targets();if(!ts.length)return;const
  for(const p of ts){const r=strokeOutline(p);if(r.err){toast(r.err);return}jobs.push([p,r])}
  const made=[];
  for(const[p,r]of jobs){const shapes=loopsToShapes(r.loops,Math.max(.15,Math.min(1,(p.sw||0)*.02)));if(!shapes.length){toast('No se pudo calcular el contorno');return}
-  const outs=shapes.map(s=>{const o={id:nid++,nodes:s.nodes,closed:true,fill:p.stroke,stroke:'none',sw:0,ly:p.ly};if(s.holes.length)o.holes=s.holes;if(lv(p,'so')<1)o.fo=lv(p,'so');if(p.gid)o.gid=p.gid;return o});
-  const i=doc.paths.indexOf(p);if(p.fill!=='none'){p.stroke='none';for(const k of['join','cap','dash','align','so'])delete p[k];doc.paths.splice(i+1,0,...outs)}else doc.paths.splice(i,1,...outs);made.push(...outs)}
+  const outs=shapes.map(s=>{const o={id:nid++,nodes:s.nodes,closed:true,fill:p.stroke,stroke:'none',sw:0,ly:p.ly};if(s.holes.length)o.holes=s.holes;if(p.gs)o.gf=gClone(p.gs);if(lv(p,'so')<1)o.fo=lv(p,'so');if(p.gid)o.gid=p.gid;return o});
+  const i=doc.paths.indexOf(p);if(p.fill!=='none'){p.stroke='none';delete p.gs;for(const k of['join','cap','dash','align','so'])delete p[k];doc.paths.splice(i+1,0,...outs)}else doc.paths.splice(i,1,...outs);made.push(...outs)}
  setSel(made);commit();toast('Contorno convertido en forma')};
 
 /* ---------- alinear y distribuir (etapa 18) ---------- */
@@ -974,7 +1005,7 @@ function saveAl(){try{localStorage.setItem('vec-al',JSON.stringify({to:alTo,stro
 function unitsOf(ts){const g=new Map(),us=[];for(const p of ts){if(p.gid){if(!g.has(p.gid)){const u={paths:[]};g.set(p.gid,u);us.push(u)}g.get(p.gid).paths.push(p)}else us.push({paths:[p]})}return us}
 function visBounds(p){const b=bounds(p);if(alStroke&&p.stroke!=='none'&&(p.sw||0)>0){const a=p.closed?lv(p,'align'):'center',e=a==='inside'?0:a==='outside'?p.sw:p.sw/2;b.x0-=e;b.y0-=e;b.x1+=e;b.y1+=e}return b}
 function unitBox(u){const r={x0:1e9,y0:1e9,x1:-1e9,y1:-1e9};for(const p of u.paths){const b=visBounds(p);r.x0=Math.min(r.x0,b.x0);r.y0=Math.min(r.y0,b.y0);r.x1=Math.max(r.x1,b.x1);r.y1=Math.max(r.y1,b.y1)}return r}
-function shiftUnit(u,dx,dy){for(const p of u.paths)for(const n of p.nodes.concat(...(p.holes||[]))){n.x+=dx;n.y+=dy}}
+function shiftUnit(u,dx,dy){for(const p of u.paths){for(const n of p.nodes.concat(...(p.holes||[]))){n.x+=dx;n.y+=dy}gshift(p,dx,dy)}}
 function alignTo(mode){finishCur();const ts=targets();if(!ts.length)return;const us=unitsOf(ts).map(u=>({u,b:unitBox(u)})),toCanvas=alTo==='canvas'||(alTo==='auto'&&us.length===1);
  const R=toCanvas?{x0:0,y0:0,x1:doc.w,y1:doc.h}:{x0:Math.min(...us.map(o=>o.b.x0)),y0:Math.min(...us.map(o=>o.b.y0)),x1:Math.max(...us.map(o=>o.b.x1)),y1:Math.max(...us.map(o=>o.b.y1))};
  let moved=0;for(const o of us){const b=o.b;let dx=0,dy=0;
@@ -1077,7 +1108,7 @@ function syncSym(){const masters=doc.paths.filter(p=>p.sm);if(!masters.length&&!
  if(dirty)doc.paths=keep;const add=[];
  for(const m of masters)T.forEach((L,i)=>{const k=i+1,key=m.id+':'+k;let cp=copies.get(key);if(!cp){cp={id:nid++,nodes:[],closed:m.closed,fill:m.fill,stroke:m.stroke,sw:m.sw,sf:m.id,sc:k,ly:m.ly};add.push([m,cp]);copies.set(key,cp)}
   cp.nodes=m.nodes.map(n=>tn(n,c,L));if(m.holes)cp.holes=m.holes.map(h=>h.map(n=>tn(n,c,L)));else delete cp.holes;
-  for(const k2 of['closed','fill','stroke','sw','join','cap','dash','align','fo','so','ly','hid','lk']){if(m[k2]===undefined)delete cp[k2];else cp[k2]=m[k2]}});
+  for(const k2 of['closed','fill','stroke','sw','join','cap','dash','align','fo','so','ly','hid','lk']){if(m[k2]===undefined)delete cp[k2];else cp[k2]=m[k2]}{const mm=[L[0],L[2],L[1],L[3],c[0]-L[0]*c[0]-L[1]*c[1],c[1]-L[2]*c[0]-L[3]*c[1]];for(const gk of['gf','gs']){if(m[gk])cp[gk]=gxf(m[gk],mm);else delete cp[gk]}}});
  for(const[m,cp]of add)doc.paths.splice(doc.paths.indexOf(m)+1,0,cp)}
 function refresh(){normLy();syncSym();normLy()}
 function symMark(p){if(doc.sym&&doc.sym.on&&p&&p.sc===undefined)p.sm=true}
@@ -1103,6 +1134,53 @@ $('#syma').oninput=e=>{doc.sym.ang=+e.target.value;$('#symao').textContent=e.tar
 $('#symc').onclick=()=>{doc.sym.cx=null;doc.sym.cy=null;commit()};
 $('#symun').onclick=()=>{let n=0;for(const p of doc.paths){if(p.sm){delete p.sm;n++}if(p.sc!==undefined){delete p.sc;delete p.sf}}commit();toast('Copias desvinculadas: ahora son objetos independientes')};
 
+/* ---------- degradados (etapa 21) ---------- */
+let gdOpen=false,gdTarget='fill';
+const gKey=()=>gdTarget==='fill'?'gf':'gs',gFlat=()=>gdTarget==='fill'?'fill':'stroke';
+const gClone=g=>g?JSON.parse(JSON.stringify(g)):g;
+const cpg=(o,s)=>{if(s.gf)o.gf=gClone(s.gf);if(s.gs)o.gs=gClone(s.gs);return o};
+function gxf(g,m){const q=gClone(g);q.pts=q.pts.map(p=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]]);return q}
+function gshift(p,dx,dy){for(const k of['gf','gs'])if(p[k])p[k].pts=p[k].pts.map(q=>[q[0]+dx,q[1]+dy])}
+function gradDef(g,id){const st=g.s.slice().sort((a,b)=>a.o-b.o).map(s=>`<stop offset="${+s.o.toFixed(4)}" stop-color="${s.c}"${s.a<1?` stop-opacity="${+s.a.toFixed(3)}"`:''}/>`).join('');
+ if(g.t==='l')return`<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${g.pts[0][0]}" y1="${g.pts[0][1]}" x2="${g.pts[1][0]}" y2="${g.pts[1][1]}">${st}</linearGradient>`;
+ const r=Math.hypot(g.pts[1][0]-g.pts[0][0],g.pts[1][1]-g.pts[0][1]);return`<radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${g.pts[0][0]}" cy="${g.pts[0][1]}" r="${r}">${st}</radialGradient>`}
+function cleanGrad(g){if(!g||(g.t!=='l'&&g.t!=='r')||!Array.isArray(g.pts)||g.pts.length!==2||!g.pts.every(q=>Array.isArray(q)&&q.length===2&&fin2(q[0])&&fin2(q[1]))||!Array.isArray(g.s)||g.s.length<2||g.s.length>12)return null;
+ const s=g.s.map(x=>x&&fin2(x.o)&&okCol(x.c)&&x.c!=='none'?{o:Math.max(0,Math.min(1,x.o)),c:x.c,a:fin2(x.a)?Math.max(0,Math.min(1,x.a)):1}:null);if(s.some(x=>!x))return null;s.sort((a,b)=>a.o-b.o);return{t:g.t,pts:g.pts.map(q=>[q[0],q[1]]),s}}
+function gradDefault(p,type,stops){const b=bounds(p),cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2;
+ if(type==='l')return{t:'l',pts:[[b.x0,cy],[b.x1,cy]],s:stops};const r=Math.max(b.x1-b.x0,b.y1-b.y0)/2||10;return{t:'r',pts:[[cx,cy],[cx+r,cy]],s:stops}}
+function gradSet(type){const key=gKey(),flat=gFlat(),ts=targets();if(!ts.length){toast('Selecciona una forma primero');return}
+ for(const p of ts){if(type==='s'){if(p[key]){const c=p[key].s.slice().sort((a,b)=>a.o-b.o)[0].c;delete p[key];p[flat]=c}continue}
+  let stops;if(p[key])stops=gClone(p[key].s);else{let c=p[flat];if(!c||c==='none')c=flat==='fill'?'#ff8000':'#14161a';stops=[{o:0,c,a:1},{o:1,c:'#ffffff',a:1}]}
+  p[key]=gradDefault(p,type,stops);p[flat]=stops.slice().sort((a,b)=>a.o-b.o)[0].c}
+ commit()}
+function gradSync(){const key=gKey(),flat=gFlat();if(!hasSel()||!sel[key])return;for(const p of targets()){if(p!==sel&&p[key])p[key].s=gClone(sel[key].s);if(p[key])p[flat]=p[key].s.slice().sort((a,b)=>a.o-b.o)[0].c}}
+const hex2=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));
+const lerpHex=(a,b,t)=>'#'+hex2(a).map((v,i)=>Math.round(v+(hex2(b)[i]-v)*t).toString(16).padStart(2,'0')).join('');
+function renderStops(){const box=$('#gdl');if(!$('#gdd').open)return;const gg=hasSel()?sel[gKey()]:null;
+ if(!gg){box.innerHTML='<div class="hint2">Elige Lineal o Radial para empezar. Con el apartado abierto, arrastra los puntos en el lienzo.</div>';return}
+ box.innerHTML=gg.s.map((s,i)=>`<div class="gst" data-i="${i}"><input type="color" class="gc" value="${s.c}"><input type="range" class="go" min="0" max="100" value="${Math.round(s.o*100)}" title="Posición"><input type="range" class="ga" min="0" max="100" value="${Math.round(s.a*100)}" title="Opacidad"><button class="gx" ${gg.s.length<=2?'disabled':''} title="Quitar parada">×</button></div>`).join('')}
+function syncGradUI(){document.querySelectorAll('#gdt button').forEach(b=>b.classList.toggle('on',b.dataset.v===gdTarget));
+ const gg=hasSel()?sel[gKey()]:null;document.querySelectorAll('#gdk button').forEach(b=>b.classList.toggle('on',b.dataset.v===(gg?gg.t:'s')));
+ $('#gdadd').disabled=$('#gdinv').disabled=$('#gdrst').disabled=!gg||0;$('#gdadd').disabled=!gg||gg.s.length>=10;renderStops()}
+$('#gdt').onclick=e=>{const b=e.target.closest('button');if(b){gdTarget=b.dataset.v;syncGradUI();draw()}};
+$('#gdk').onclick=e=>{const b=e.target.closest('button');if(b)gradSet(b.dataset.v)};
+$('#gdd').addEventListener('toggle',()=>{gdOpen=$('#gdd').open;renderStops();draw()});
+{const box=$('#gdl'),stop=e=>{const row=e.target.closest('.gst');return row?+row.dataset.i:-1};
+ box.addEventListener('input',e=>{const i=stop(e),gg=hasSel()?sel[gKey()]:null;if(i<0||!gg)return;const s=gg.s[i];
+  if(e.target.classList.contains('gc'))s.c=e.target.value;else if(e.target.classList.contains('go'))s.o=+e.target.value/100;else if(e.target.classList.contains('ga'))s.a=+e.target.value/100;gradSync();draw()});
+ box.addEventListener('change',e=>{const gg=hasSel()?sel[gKey()]:null;if(!gg||stop(e)<0)return;gradSync();commit()});
+ box.addEventListener('click',e=>{if(!e.target.classList.contains('gx'))return;const i=stop(e),gg=hasSel()?sel[gKey()]:null;if(!gg||gg.s.length<=2)return;gg.s.splice(i,1);gradSync();commit()})}
+$('#gdadd').onclick=()=>{const gg=hasSel()?sel[gKey()]:null;if(!gg||gg.s.length>=10)return;const s=gg.s.slice().sort((a,b)=>a.o-b.o);let bi=0,bg=-1;for(let i=0;i<s.length-1;i++)if(s[i+1].o-s[i].o>bg){bg=s[i+1].o-s[i].o;bi=i}
+ gg.s.push({o:(s[bi].o+s[bi+1].o)/2,c:lerpHex(s[bi].c,s[bi+1].c,.5),a:(s[bi].a+s[bi+1].a)/2});gradSync();commit()};
+$('#gdinv').onclick=()=>{const gg=hasSel()?sel[gKey()]:null;if(!gg)return;gg.s.forEach(x=>x.o=1-x.o);gradSync();commit()};
+$('#gdrst').onclick=()=>{const key=gKey();for(const p of targets())if(p[key])p[key]=gradDefault(p,p[key].t,p[key].s);commit()};
+function gradHandles(k){const gg=sel[gKey()],[p0,p1]=gg.pts,s=gg.s.slice().sort((a,b)=>a.o-b.o);let h='';
+ const ln=`x1="${p0[0]}" y1="${p0[1]}" x2="${p1[0]}" y2="${p1[1]}"`;
+ if(gg.t==='l')h+=`<line ${ln} stroke="#000" stroke-width="${3.4*k}" opacity=".45"/><line ${ln} stroke="#fff" stroke-width="${1.6*k}"/>`;
+ else{const r=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]);h+=`<circle cx="${p0[0]}" cy="${p0[1]}" r="${r}" fill="none" stroke="#000" stroke-width="${3.4*k}" opacity=".45"/><circle cx="${p0[0]}" cy="${p0[1]}" r="${r}" fill="none" stroke="#fff" stroke-width="${1.6*k}" stroke-dasharray="${6*k} ${4*k}"/><line ${ln} stroke="#fff" stroke-width="${1.2*k}" opacity=".7"/>`}
+ for(const st of s){const x=p0[0]+(p1[0]-p0[0])*st.o,y=p0[1]+(p1[1]-p0[1])*st.o;h+=`<rect x="${x-4*k}" y="${y-4*k}" width="${8*k}" height="${8*k}" transform="rotate(45 ${x} ${y})" fill="${st.c}" stroke="#fff" stroke-width="${1.4*k}"/>`}
+ for(const[q,c]of[[p0,s[0].c],[p1,s[s.length-1].c]])h+=`<circle cx="${q[0]}" cy="${q[1]}" r="${9*k}" fill="${c}" stroke="#fff" stroke-width="${2.4*k}"/><circle cx="${q[0]}" cy="${q[1]}" r="${9*k}" fill="none" stroke="#5b8cff" stroke-width="${1*k}"/>`;
+ return h}
 /* ---------- inicio ---------- */
 try{const s=JSON.parse(localStorage.getItem('vec-doc'));if(s&&s.paths)doc=s}catch(e){}
 nid=Math.max(0,...doc.paths.map(p=>p.id||0))+1;
