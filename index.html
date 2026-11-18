@@ -79,11 +79,16 @@ dialog{max-height:92vh;overflow:auto}
 #lnd summary::before,#ald summary::before,#syd summary::before,#gdd summary::before{content:'▸ '}#lnd[open] summary::before,#ald[open] summary::before,#syd[open] summary::before,#gdd[open] summary::before{content:'▾ '}
 #lnd .srow>span,#ald .srow>span,#syd .srow>span,#gdd .srow>span{width:74px}
 #gdd .srow>button{flex:1}
-.gst{display:flex;gap:6px;align-items:center;margin:4px 0}
+.gst{border:1px solid var(--line);border-radius:10px;padding:6px;margin:6px 0;background:#23262c}
+.gst.act{border-color:var(--acc)}
+.gr1,.gr2{display:flex;gap:6px;align-items:center}.gr2{margin-top:6px}
 .gst input[type=color]{width:34px;height:34px;padding:0;border-radius:8px;flex:none}
-.gst input[type=range]{flex:1;width:auto;min-width:0;height:30px;padding:0;background:none;border:0}
-.gst .ga{flex:none;width:64px}
-.gst button{min-width:30px;width:30px;height:30px;padding:0;flex:none}
+.gst .gh{flex:1;width:auto;min-width:0;height:34px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.gst .gd,.gst .gx{min-width:34px;width:34px;height:34px;padding:0;flex:none}
+.gr2 label{flex:1;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--dim);min-width:0}
+.gr2 input[type=range]{flex:1;width:auto;min-width:0;height:26px;padding:0;background:none;border:0}
+.gr2 output{width:34px;text-align:right;color:var(--ink)}
+#gused{min-height:30px}
 .hint2{color:var(--dim);font-size:12px;padding:4px 2px}
 #syd .srow>button{flex:1}
 #syd .srow>button.on{background:var(--acc);border-color:var(--acc);color:#fff}
@@ -762,7 +767,7 @@ $('#xicons').onclick=async()=>{if(!doc.paths.some(p=>p.nodes.length>1)){dlg.clos
 let rec=[];try{rec=(JSON.parse(localStorage.getItem('vec-rec'))||[]).filter(c=>/^#[0-9a-f]{6}$/.test(c)).slice(0,16)}catch(e){}
 function noteCol(c){if(!/^#[0-9a-f]{6}$/i.test(c))return;c=c.toLowerCase();rec=[c,...rec.filter(x=>x!==c)].slice(0,16);try{localStorage.setItem('vec-rec',JSON.stringify(rec))}catch(e){}}
 let usedTarget='fill',usedKey='',pick=null;
-function usedList(){const s=new Set(rec);for(const p of doc.paths)for(const k of['fill','stroke'])if(/^#[0-9a-f]{6}$/i.test(p[k]))s.add(p[k].toLowerCase());return[...s].slice(0,24)}
+function usedList(){const s=new Set(rec);for(const p of doc.paths){for(const k of['fill','stroke'])if(/^#[0-9a-f]{6}$/i.test(p[k]))s.add(p[k].toLowerCase());for(const k of['gf','gs'])if(p[k])for(const st of p[k].s)if(/^#[0-9a-f]{6}$/i.test(st.c))s.add(st.c.toLowerCase())}return[...s].slice(0,24)}
 function syncColorUI(){const t=hasSel()?sel:style;
  for(const[id,key]of[['#hexf','fill'],['#hexs','stroke']]){const el=$(id);if(document.activeElement!==el)el.value=t[key]}
  $('#utf').classList.toggle('on',usedTarget==='fill');$('#uts').classList.toggle('on',usedTarget==='stroke');
@@ -780,9 +785,9 @@ function refColor(pt){return new Promise(res=>{if(!ref||pt.x<ref.x||pt.y<ref.y||
  if(refCan&&refCanSrc===ref.src)return go();const im=new Image();im.onload=()=>{refCan=document.createElement('canvas');refCan.width=im.width;refCan.height=im.height;refCan.getContext('2d').drawImage(im,0,0);refCanSrc=ref.src;go()};im.onerror=()=>res(null);im.src=ref.src})}
 function startPick(k){finishCur();pick=k;styOpen=false;ctxPos=null;updateSty();toast(k==='fill'?'Toca el color que quieres para el relleno':'Toca el color que quieres para el contorno')}
 $('#dpf').onclick=()=>startPick('fill');$('#dps').onclick=()=>startPick('stroke');
-function pickAt(pt){const key=pick;pick=null;const p=hitPath(pt,true);let c=null;
+function pickAt(pt){const key=pick,gi=gPickStop;pick=null;gPickStop=-1;const p=hitPath(pt,true);let c=null;
  if(p){c=p[key];if(c==='none')c=key==='fill'?p.stroke:p.fill;if(c==='none')c=null}
- (c?Promise.resolve(c):refColor(pt)).then(c=>{if(!c){toast('Ahí no hay color que tomar');return}setCol(key,c);toast('Color tomado: '+c)})}
+ (c?Promise.resolve(c):refColor(pt)).then(c=>{if(!c){toast('Ahí no hay color que tomar');return}if(gi>=0){stopColor(gi,c);styOpen=true;updateSty()}else setCol(key,c);toast('Color tomado: '+c)})}
 /* Mover / rotar / escalar */
 const cloneP=p=>JSON.parse(JSON.stringify({nodes:p.nodes,holes:p.holes||[],gf:p.gf,gs:p.gs}));
 function xformPath(p,o,m){const f=(n,s)=>{n.x=m[0]*s.x+m[2]*s.y+m[4];n.y=m[1]*s.x+m[3]*s.y+m[5];n.i=[m[0]*s.i[0]+m[2]*s.i[1],m[1]*s.i[0]+m[3]*s.i[1]];n.o=[m[0]*s.o[0]+m[2]*s.o[1],m[1]*s.o[0]+m[3]*s.o[1]]};
@@ -1156,22 +1161,37 @@ function gradSet(type){const key=gKey(),flat=gFlat(),ts=targets();if(!ts.length)
 function gradSync(){const key=gKey(),flat=gFlat();if(!hasSel()||!sel[key])return;for(const p of targets()){if(p!==sel&&p[key])p[key].s=gClone(sel[key].s);if(p[key])p[flat]=p[key].s.slice().sort((a,b)=>a.o-b.o)[0].c}}
 const hex2=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));
 const lerpHex=(a,b,t)=>'#'+hex2(a).map((v,i)=>Math.round(v+(hex2(b)[i]-v)*t).toString(16).padStart(2,'0')).join('');
+let gAct=0,gPickStop=-1;
+function startPickStop(i){gAct=i;gPickStop=i;startPick('fill')}
+function stopColor(i,c){const gg=hasSel()?sel[gKey()]:null;if(!gg||!gg.s[i])return;gg.s[i].c=c;noteCol(c);gradSync();commit()}
 function renderStops(){const box=$('#gdl');if(!$('#gdd').open)return;const gg=hasSel()?sel[gKey()]:null;
  if(!gg){box.innerHTML='<div class="hint2">Elige Lineal o Radial para empezar. Con el apartado abierto, arrastra los puntos en el lienzo.</div>';return}
- box.innerHTML=gg.s.map((s,i)=>`<div class="gst" data-i="${i}"><input type="color" class="gc" value="${s.c}"><input type="range" class="go" min="0" max="100" value="${Math.round(s.o*100)}" title="Posición"><input type="range" class="ga" min="0" max="100" value="${Math.round(s.a*100)}" title="Opacidad"><button class="gx" ${gg.s.length<=2?'disabled':''} title="Quitar parada">×</button></div>`).join('')}
+ if(gAct>=gg.s.length)gAct=gg.s.length-1;if(gAct<0)gAct=0;
+ box.innerHTML=gg.s.map((s,i)=>`<div class="gst${i===gAct?' act':''}" data-i="${i}"><div class="gr1"><input type="color" class="gc" value="${s.c}"><input type="text" class="gh" value="${s.c}" maxlength="9" autocapitalize="off" autocomplete="off" spellcheck="false" aria-label="Código de color"><button class="gd" title="Cuentagotas">💧</button><button class="gx" ${gg.s.length<=2?'disabled':''} title="Quitar parada">×</button></div><div class="gr2"><label>Pos.<input type="range" class="go" min="0" max="100" value="${Math.round(s.o*100)}"><output>${Math.round(s.o*100)}%</output></label><label>Opac.<input type="range" class="ga" min="0" max="100" value="${Math.round(s.a*100)}"><output>${Math.round(s.a*100)}%</output></label></div></div>`).join('')+'<div class="srow"><span>Usados</span><div class="sw" id="gused"></div></div>';
+ const gu=$('#gused');usedList().forEach(c=>{const b=document.createElement('button');b.className='dot';b.style.background=c;b.title=c;b.dataset.c=c;gu.appendChild(b)})}
 function syncGradUI(){document.querySelectorAll('#gdt button').forEach(b=>b.classList.toggle('on',b.dataset.v===gdTarget));
  const gg=hasSel()?sel[gKey()]:null;document.querySelectorAll('#gdk button').forEach(b=>b.classList.toggle('on',b.dataset.v===(gg?gg.t:'s')));
  $('#gdadd').disabled=$('#gdinv').disabled=$('#gdrst').disabled=!gg||0;$('#gdadd').disabled=!gg||gg.s.length>=10;renderStops()}
 $('#gdt').onclick=e=>{const b=e.target.closest('button');if(b){gdTarget=b.dataset.v;syncGradUI();draw()}};
 $('#gdk').onclick=e=>{const b=e.target.closest('button');if(b)gradSet(b.dataset.v)};
 $('#gdd').addEventListener('toggle',()=>{gdOpen=$('#gdd').open;renderStops();draw()});
-{const box=$('#gdl'),stop=e=>{const row=e.target.closest('.gst');return row?+row.dataset.i:-1};
- box.addEventListener('input',e=>{const i=stop(e),gg=hasSel()?sel[gKey()]:null;if(i<0||!gg)return;const s=gg.s[i];
-  if(e.target.classList.contains('gc'))s.c=e.target.value;else if(e.target.classList.contains('go'))s.o=+e.target.value/100;else if(e.target.classList.contains('ga'))s.a=+e.target.value/100;gradSync();draw()});
- box.addEventListener('change',e=>{const gg=hasSel()?sel[gKey()]:null;if(!gg||stop(e)<0)return;gradSync();commit()});
- box.addEventListener('click',e=>{if(!e.target.classList.contains('gx'))return;const i=stop(e),gg=hasSel()?sel[gKey()]:null;if(!gg||gg.s.length<=2)return;gg.s.splice(i,1);gradSync();commit()})}
+{const box=$('#gdl'),idx=e=>{const r=e.target.closest('.gst');return r?+r.dataset.i:-1},gg=()=>hasSel()?sel[gKey()]:null,
+  setAct=i=>{if(i<0)return;gAct=i;box.querySelectorAll('.gst').forEach(r=>r.classList.toggle('act',+r.dataset.i===i))};
+ box.addEventListener('focusin',e=>setAct(idx(e)));box.addEventListener('pointerdown',e=>{if(e.target.closest('.gst'))setAct(idx(e))});
+ box.addEventListener('input',e=>{const i=idx(e),g=gg();if(i<0||!g)return;const s=g.s[i],t=e.target;
+  if(t.classList.contains('gc')){s.c=t.value;t.closest('.gst').querySelector('.gh').value=s.c}
+  else if(t.classList.contains('go')){s.o=+t.value/100;t.nextElementSibling.textContent=t.value+'%'}
+  else if(t.classList.contains('ga')){s.a=+t.value/100;t.nextElementSibling.textContent=t.value+'%'}
+  else return;gradSync();draw()});
+ box.addEventListener('change',e=>{const i=idx(e),g=gg();if(i<0||!g)return;const t=e.target;
+  if(t.classList.contains('gh')){const c=parseHex(t.value);if(!c||c==='none'){toast('Código no válido (ejemplo: #ff8000 o #f80)');renderStops();return}g.s[i].c=c;noteCol(c);gradSync();commit();return}
+  if(t.classList.contains('gc'))noteCol(t.value);gradSync();commit()});
+ box.addEventListener('click',e=>{const g=gg(),t=e.target,i=idx(e);
+  if(t.classList.contains('gx')&&g&&g.s.length>2){g.s.splice(i,1);gAct=Math.max(0,Math.min(gAct,g.s.length-1));gradSync();commit()}
+  else if(t.classList.contains('gd'))startPickStop(i);
+  else if(t.classList.contains('dot')&&g){stopColor(gAct,t.dataset.c)}})}
 $('#gdadd').onclick=()=>{const gg=hasSel()?sel[gKey()]:null;if(!gg||gg.s.length>=10)return;const s=gg.s.slice().sort((a,b)=>a.o-b.o);let bi=0,bg=-1;for(let i=0;i<s.length-1;i++)if(s[i+1].o-s[i].o>bg){bg=s[i+1].o-s[i].o;bi=i}
- gg.s.push({o:(s[bi].o+s[bi+1].o)/2,c:lerpHex(s[bi].c,s[bi+1].c,.5),a:(s[bi].a+s[bi+1].a)/2});gradSync();commit()};
+ gg.s.push({o:(s[bi].o+s[bi+1].o)/2,c:lerpHex(s[bi].c,s[bi+1].c,.5),a:(s[bi].a+s[bi+1].a)/2});gAct=gg.s.length-1;gradSync();commit()};
 $('#gdinv').onclick=()=>{const gg=hasSel()?sel[gKey()]:null;if(!gg)return;gg.s.forEach(x=>x.o=1-x.o);gradSync();commit()};
 $('#gdrst').onclick=()=>{const key=gKey();for(const p of targets())if(p[key])p[key]=gradDefault(p,p[key].t,p[key].s);commit()};
 function gradHandles(k){const gg=sel[gKey()],[p0,p1]=gg.pts,s=gg.s.slice().sort((a,b)=>a.o-b.o);let h='';
