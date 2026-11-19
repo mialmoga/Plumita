@@ -79,6 +79,14 @@ dialog{max-height:92vh;overflow:auto}
 #lnd summary::before,#ald summary::before,#syd summary::before,#gdd summary::before{content:'▸ '}#lnd[open] summary::before,#ald[open] summary::before,#syd[open] summary::before,#gdd[open] summary::before{content:'▾ '}
 #lnd .srow>span,#ald .srow>span,#syd .srow>span,#gdd .srow>span{width:74px}
 #gdd .srow>button{flex:1}
+#mtd summary{cursor:pointer;color:var(--dim);font-size:12px;padding:8px 0;list-style:none}
+#mtd summary::before{content:'▸ '}#mtd[open] summary::before{content:'▾ '}
+#mtd .srow>span{width:56px}#mtd .srow>span.u{width:50px;text-align:right}
+.mn{flex:1;width:auto;min-width:0;height:38px;font-size:14px;text-align:right}
+.rp{display:grid;grid-template-columns:repeat(3,20px);gap:3px;flex:1}
+.rp button{min-width:0;width:20px;height:20px;padding:0;border-radius:5px}
+.rp button.on{background:var(--acc);border-color:var(--acc)}
+#mlock{min-width:44px;flex:none!important}#mlock.on{background:var(--acc);border-color:var(--acc)}
 .gst{border:1px solid var(--line);border-radius:10px;padding:6px;margin:6px 0;background:#23262c}
 .gst.act{border-color:var(--acc)}
 .gr1,.gr2{display:flex;gap:6px;align-items:center}.gr2{margin-top:6px}
@@ -190,6 +198,13 @@ html{scrollbar-width:thin;scrollbar-color:#4a4f5a transparent}
   <div class="srow"><span>Tipo</span><div class="seg" id="gdk"><button data-v="s">Sólido</button><button data-v="l">Lineal</button><button data-v="r">Radial</button></div></div>
   <div id="gdl"></div>
   <div class="srow"><button id="gdadd">+ Parada</button><button id="gdinv">Invertir</button><button id="gdrst" title="Devuelve el degradado a su posición inicial">Restablecer</button></div>
+ </details>
+ <details id="mtd"><summary>Medidas exactas</summary>
+  <div class="srow"><span>Punto</span><div class="rp" id="mrp"><button data-i="0"></button><button data-i="1"></button><button data-i="2"></button><button data-i="3"></button><button data-i="4"></button><button data-i="5"></button><button data-i="6"></button><button data-i="7"></button><button data-i="8"></button></div><button id="mlock" title="Bloquear proporción">🔓</button></div>
+  <div class="srow"><span>X</span><input class="mn" id="mdx" inputmode="decimal"><span class="u">Y</span><input class="mn" id="mdy" inputmode="decimal"></div>
+  <div class="srow"><span>Ancho</span><input class="mn" id="mdw" inputmode="decimal"><span class="u">Alto</span><input class="mn" id="mdh" inputmode="decimal"></div>
+  <div class="srow"><span>Girar °</span><input class="mn" id="mdr" inputmode="decimal" placeholder="0"><span class="u">Grosor</span><input class="mn" id="mds" inputmode="decimal"></div>
+  <div class="srow"><span>Medir</span><div class="seg" id="mmed"><button data-v="1">Con contorno</button><button data-v="0">Solo forma</button></div></div>
  </details>
  <details id="ald"><summary>Alinear y distribuir</summary>
   <div class="srow"><span>Alinear</span><div class="seg" id="alg">
@@ -393,7 +408,7 @@ function updateSty(){if(styOpen&&layOpen){layOpen=false;$('#lay').hidden=true}if
  $('#sw').value=t.sw;$('#swo').textContent=t.sw;
  const b=$('#stybtn');b.style.background=t.fill==='none'?'repeating-linear-gradient(45deg,#666 0 3px,#2a2d34 3px 6px)':t.fill;b.style.borderColor=t.stroke==='none'?'#33363d':t.stroke;
  sty.hidden=!styOpen;placeSty();placeFab();
- $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=$('#bint').disabled=$('#bxor').disabled=$('#bdiv').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=$('#o2s').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);{const T=targets();$('#grp').disabled=!(T.length>1&&!T.every(p=>p.gid&&p.gid===T[0].gid));$('#ugrp').disabled=!T.some(p=>p.gid)}syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI();syncLineUI();syncAlignUI();syncSymUI();syncGradUI()}
+ $('#dup').disabled=$('#fwd').disabled=$('#bck').disabled=!hasSel();$('#badd').disabled=$('#bsub').disabled=$('#bint').disabled=$('#bxor').disabled=$('#bdiv').disabled=!(hasSel()&&sel.closed);$('#mh').disabled=$('#mv').disabled=$('#m4').disabled=$('#o2s').disabled=!hasSel();$('#hrel').disabled=!(hasSel()&&sel.holes&&sel.holes.length);{const T=targets();$('#grp').disabled=!(T.length>1&&!T.every(p=>p.gid&&p.gid===T[0].gid));$('#ugrp').disabled=!T.some(p=>p.gid)}syncRefUI();syncMirrorUI();syncGuideUI();syncColorUI();syncLineUI();syncAlignUI();syncSymUI();syncGradUI();syncMeasUI()}
 $('#stybtn').onclick=()=>{ctxPos=null;styOpen=!styOpen;updateSty()};
 $('#sw').oninput=e=>{const v=+e.target.value;style.sw=v;for(const p of targets())p.sw=v;$('#swo').textContent=v;draw()};
 $('#sw').onchange=()=>{if(hasSel())commit()};
@@ -1201,6 +1216,35 @@ function gradHandles(k){const gg=sel[gKey()],[p0,p1]=gg.pts,s=gg.s.slice().sort(
  for(const st of s){const x=p0[0]+(p1[0]-p0[0])*st.o,y=p0[1]+(p1[1]-p0[1])*st.o;h+=`<rect x="${x-4*k}" y="${y-4*k}" width="${8*k}" height="${8*k}" transform="rotate(45 ${x} ${y})" fill="${st.c}" stroke="#fff" stroke-width="${1.4*k}"/>`}
  for(const[q,c]of[[p0,s[0].c],[p1,s[s.length-1].c]])h+=`<circle cx="${q[0]}" cy="${q[1]}" r="${9*k}" fill="${c}" stroke="#fff" stroke-width="${2.4*k}"/><circle cx="${q[0]}" cy="${q[1]}" r="${9*k}" fill="none" stroke="#5b8cff" stroke-width="${1*k}"/>`;
  return h}
+/* ---------- medidas exactas (etapa 23) ---------- */
+let mRef=4,mLock=false;
+const fmtN=v=>String(Math.round(v*100)/100),parseN=v=>{const n=parseFloat(String(v).replace(',','.'));return Number.isFinite(n)?n:null};
+const refPt=(b,i)=>[b.x0+(i%3)/2*(b.x1-b.x0),b.y0+Math.floor(i/3)/2*(b.y1-b.y0)];
+function unionBox(ts,f){const r={x0:1e9,y0:1e9,x1:-1e9,y1:-1e9};for(const p of ts){const v=f(p);r.x0=Math.min(r.x0,v.x0);r.y0=Math.min(r.y0,v.y0);r.x1=Math.max(r.x1,v.x1);r.y1=Math.max(r.y1,v.y1)}return r}
+function measure(){const ts=targets();return ts.length?{ts,b:unionBox(ts,visBounds)}:null}
+function moveTo(axis,val){const m=measure();if(!m)return;const r=refPt(m.b,mRef),d=val-(axis==='x'?r[0]:r[1]);if(Math.abs(d)<1e-9)return;shiftUnit({paths:m.ts},axis==='x'?d:0,axis==='y'?d:0);commit()}
+function resizeTo(axis,val){const m=measure();if(!m)return;const ts=m.ts,vb=m.b,gb=unionBox(ts,bounds),vw=vb.x1-vb.x0,vh=vb.y1-vb.y0,gw=gb.x1-gb.x0,gh=gb.y1-gb.y0,ew=vw-gw,eh=vh-gh;
+ let nw=axis==='w'?val:vw,nh=axis==='h'?val:vh;if(mLock){if(axis==='w')nh=vh*(val/vw);else nw=vw*(val/vh)}
+ if((axis==='w'||mLock)&&gw>1e-9&&nw<=ew+.01||(axis==='h'||mLock)&&gh>1e-9&&nh<=eh+.01){toast('Esa medida es demasiado pequeña');syncMeasUI();return}
+ const fx=gw>1e-9?(nw-ew)/gw:1,fy=gh>1e-9?(nh-eh)/gh:1,R=refPt(vb,mRef),A=refPt(gb,mRef),mat=[fx,0,0,fy,A[0]*(1-fx),A[1]*(1-fy)];
+ for(const p of ts)xformPath(p,cloneP(p),mat);
+ const m2=measure(),R2=refPt(m2.b,mRef);shiftUnit({paths:ts},R[0]-R2[0],R[1]-R2[1]);commit()}
+function rotateBy(deg){const m=measure();if(!m||!deg)return;const R=refPt(m.b,mRef),a=deg*Math.PI/180,co=Math.cos(a),si=Math.sin(a),mat=[co,si,-si,co,R[0]-co*R[0]+si*R[1],R[1]-si*R[0]-co*R[1]];for(const p of m.ts)xformPath(p,cloneP(p),mat);commit()}
+function setSw(v){const ts=targets();if(!ts.length)return;v=Math.max(0,Math.min(200,v));for(const p of ts)p.sw=v;style.sw=v;commit()}
+function syncMeasUI(){const m=measure(),on=!!m;['mdx','mdy','mdw','mdh','mdr','mds'].forEach(id=>$('#'+id).disabled=!on);
+ document.querySelectorAll('#mrp button').forEach(b=>b.classList.toggle('on',+b.dataset.i===mRef));$('#mlock').textContent=mLock?'🔒':'🔓';$('#mlock').classList.toggle('on',mLock);
+ document.querySelectorAll('#mmed button').forEach(b=>b.classList.toggle('on',(b.dataset.v==='1')===alStroke));
+ if(!m)return;const R=refPt(m.b,mRef),set=(id,v)=>{const el=$('#'+id);if(document.activeElement!==el)el.value=fmtN(v)};
+ set('mdx',R[0]);set('mdy',R[1]);set('mdw',m.b.x1-m.b.x0);set('mdh',m.b.y1-m.b.y0);set('mds',hasSel()?sel.sw:0);if(document.activeElement!==$('#mdr'))$('#mdr').value=''}
+{const _sa=syncAlignUI;syncAlignUI=function(){_sa();syncMeasUI()}}
+const bad=()=>{toast('Escribe un número válido');syncMeasUI()};
+for(const[id,fn]of[['mdx',v=>moveTo('x',v)],['mdy',v=>moveTo('y',v)],['mdw',v=>{if(v<=0)return bad();resizeTo('w',v)}],['mdh',v=>{if(v<=0)return bad();resizeTo('h',v)}],['mdr',v=>rotateBy(v)],['mds',v=>{if(v<0)return bad();setSw(v)}]]){const el=$('#'+id);
+ el.addEventListener('change',()=>{const v=parseN(el.value);if(v===null){toast('Escribe un número válido');el.value='';syncMeasUI();return}fn(v);el.blur()});
+ el.addEventListener('keydown',e=>{if(e.key==='Enter')el.blur()})}
+$('#mrp').onclick=e=>{const b=e.target.closest('button');if(b){mRef=+b.dataset.i;syncMeasUI()}};
+$('#mlock').onclick=()=>{mLock=!mLock;syncMeasUI()};
+$('#mmed').onclick=e=>{const b=e.target.closest('button');if(b){alStroke=b.dataset.v==='1';saveAl();syncAlignUI()}};
+
 /* ---------- inicio ---------- */
 try{const s=JSON.parse(localStorage.getItem('vec-doc'));if(s&&s.paths)doc=s}catch(e){}
 nid=Math.max(0,...doc.paths.map(p=>p.id||0))+1;
