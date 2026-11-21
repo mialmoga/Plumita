@@ -19,7 +19,7 @@ Un solo archivo HTML, sin dependencias, sin servidor y sin internet. Lo abres en
 **Dibujo**
 - **Pluma:** toca para poner nodos, arrastra para sacar jaladores y curvar, toca el primer nodo para cerrar la forma. Con la pluma también puedes **continuar un trazo abierto** tocando uno de sus extremos (los extremos libres se marcan con un anillo), y si estás dibujando y tocas el extremo de **otro** trazo abierto, **los une** en uno solo.
 - **Lápiz:** dibuja a mano alzada con el dedo; al soltar, la línea se ajusta a curvas de Bézier con pocos nodos (algoritmo de Schneider). El control **Suavizado** del panel de color decide cuánto simplifica: más alto, menos nodos. Si el final cae cerca del principio, la forma se cierra y se rellena. Si empiezas sobre el extremo de un trazo abierto, lo continúa. Un segundo dedo a media línea la descarta.
-- **Línea:** arrastra y suelta.
+- **Línea y formas básicas:** el botón de Línea agrupa cinco variantes (tócalo otra vez con una activa para abrir la tira): **Línea**, **Rectángulo** (con esquinas redondeadas ajustables), **Elipse**, **Polígono** (3 a 24 lados) y **Estrella** (puntas y radio interior ajustables). Rectángulo y elipse se arrastran de una esquina a la opuesta; con **1:1** salen cuadrados y círculos perfectos y con **Desde el centro** el primer toque es el centro (en escritorio, Shift y Alt hacen lo mismo). Polígono y estrella se dibujan desde el centro: el radio y el giro siguen al dedo. Se ven en vivo mientras arrastras, usan el imán de la retícula y quedan como trazos normales con nodos editables (la elipse, 4 nodos; el rectángulo redondeado, 8). Heredan el estilo y la capa activos y entran a la simetría en vivo. Los ajustes están en el panel de color, en *Ajustes de formas*.
 - **Nodos:** mueve nodos, estira los jaladores para ajustar la curva, o arrastra el trazo completo.
 - **Mover:** selecciona una forma y arrástrala entera. Su caja trae un círculo arriba para **rotarla** y esquinas para **escalarla** (proporcional, con la esquina opuesta fija). Con el imán encendido, mueve a saltos de retícula y rota de 15° en 15°.
 - **Selección múltiple y grupos:** el botón ☑ (flotante, a la derecha) permite sumar o quitar formas de la selección con un toque. Con la herramienta Mover, **mantén pulsado y arrastra** para seleccionar todo lo que vayas tocando a tu paso. **Agrupar** y **Desagrupar** (panel de color) hacen que varias formas se comporten como una: se seleccionan juntas y se mueven, rotan, escalan, duplican, espejan, borran, recolorean y reordenan en bloque. Los grupos se guardan en los proyectos; en el SVG exportado quedan aplanados.
@@ -103,6 +103,7 @@ o 1. En linea [Plumita en GitHub pages](https://mialmoga.github.io/Plumita/)
 | Tomar un color de otra forma o de la foto | Panel de color → *Gotero* → toca el color |
 | Usar un color exacto | Panel de color → *Código*: escribe el hexadecimal |
 | Hacer los íconos de una app | Activa la *Guía ícono*, dibuja dentro de la zona segura y exporta con *Exportar assets para app* (botón del tamaño del lienzo) |
+| Dibujar un rectángulo, elipse, polígono o estrella | Toca el botón de Línea (o `R` `E` `G` `S`) y elige la variante; ajustes en el panel de color → *Ajustes de formas* |
 | Hacer una copia espejo | Selecciona la forma, abre el panel de color y toca *Espejo*; elige el *Eje* (lienzo o forma) |
 | Sumar o restar | Selecciona una forma cerrada con *Nodos*, abre el panel de color, toca *Sumar* o *Restar* y luego toca la otra forma |
 | Mover imagen de referencia | Panel de color → *Mover*, y arrastra o pellizca |
@@ -115,7 +116,8 @@ Pensado para el teléfono, pero también se lleva bien con una computadora:
 
 | Acción | Atajo |
 |---|---|
-| Pluma, Lápiz, Línea, Nodos, Mover, Convertir, ± Nodo | `1` a `7` (en el orden de los botones), o `P` `N` `L` `A` `V` `C` `+` `-` |
+| Pluma, Lápiz, Línea/formas, Nodos, Mover, Convertir, ± Nodo | `1` a `7` (en el orden de los botones; `3` es la última forma usada), o `P` `N` `L` `A` `V` `C` `+` `-` |
+| Línea, Rectángulo, Elipse, Polígono, Estrella | `L` `R` `E` `G` `S` |
 | Cuentagotas de relleno / de contorno | `I` / `Shift+I` |
 | Seleccionar todo / Agrupar / Desagrupar | `Ctrl+A` / `Ctrl+G` / `Ctrl+Shift+G` |
 | Sumar o quitar una forma de la selección | `Shift` + clic con la herramienta Mover |
@@ -180,6 +182,7 @@ Todo vive en un solo archivo, organizado por secciones comentadas: geometría, h
 - **Contorno a forma** aproxima el resultado con curvas de Bézier ajustadas (error de décimas de unidad), no es el desplazamiento matemático exacto; en trazos muy gruesos sobre curvas muy cerradas puede convenir revisar los nodos.
 - Las capas son de un solo nivel (no hay subcapas); los grupos viven dentro de una capa, y un grupo con objetos en capas distintas se selecciona entero pero solo con lo que esté visible y desbloqueado.
 - En la simetría vinculada, las copias no se editan directamente (se edita el original); mover, rotar o escalar el original mueve sus copias reflejadas, y Alinear/Distribuir miden solo el original. Si cambias el tipo o los ejes, todos los objetos vinculados se recalculan; **Desvincular** antes si quieres conservarlos como estaban.
+- Las formas básicas no son «formas vivas»: una vez dibujadas, sus lados, puntas o esquinas se editan con los nodos, no con los ajustes.
 - Los degradados radiales son circulares (un solo radio); el cuentagotas toma el color de la primera parada; no hay degradados de malla ni cónicos.
 - Los grupos son planos (no hay grupos dentro de grupos) y las operaciones de pathfinder piden una sola forma, así que desagrupa antes de usarlas.
 - No hay degradados, texto, ni panel de capas con nombres.
